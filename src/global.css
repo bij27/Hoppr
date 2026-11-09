@@ -11,3 +11,11 @@ html,
 body {
   overscroll-behavior: none;
 }
+
+/* Web map tiles (src/components/map/venue-map.web.tsx): quiet grayscale so only pins have color. */
+.hoppr-tiles-light {
+  filter: grayscale(1) contrast(0.92) brightness(1.04);
+}
+.hoppr-tiles-dark {
+  filter: grayscale(1) invert(1) brightness(0.82) contrast(0.92);
+}

@@ -53,5 +53,6 @@ database, in filename order (currently by pasting it into the Supabase SQL Edito
 
 - iOS uses Apple Maps and needs no key. Android uses Google Maps: it works in Expo Go, but store
   builds need a Google Maps API key (react-native-maps config plugin, `androidGoogleMapsApiKey`).
-- Web uses Leaflet with CARTO basemap tiles (OpenStreetMap data). Fine for development; check
-  CARTO's terms or switch tile providers before a public launch.
+- Web uses Leaflet with OpenStreetMap's tile servers, tinted grayscale in CSS. That's fine for
+  development, but OSM's servers aren't for app traffic: switch to a keyed tile provider
+  (e.g. Stadia Maps or MapTiler) before a public launch.

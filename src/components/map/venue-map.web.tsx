@@ -1,6 +1,10 @@
-// Web map: Leaflet with CARTO's minimal basemap (native maps libraries don't support web).
+// Web map: Leaflet with OpenStreetMap tiles (native maps libraries don't support web).
 // Leaflet touches `window` when imported, so it's loaded lazily in the browser only; the
 // server-rendered page just contains the empty map container.
+//
+// The tiles are OpenStreetMap's standard style, tinted to grayscale in CSS (see global.css)
+// so Hoppr's amber pins are the only color. OSM's tile servers are fine for development but
+// not for a public app's traffic: switch to a keyed provider (e.g. Stadia, MapTiler) before launch.
 import 'leaflet/dist/leaflet.css';
 
 import type * as Leaflet from 'leaflet';
@@ -11,12 +15,8 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 
 import type { MapPin, VenueMapProps } from './types';
 
-const TILES = {
-  light: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
-  dark: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-};
-const ATTRIBUTION =
-  '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>';
+const TILE_URL = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+const ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
 
 export function VenueMap({ pins, selectedId, onSelect, showUserLocation, bottomInset }: VenueMapProps) {
   const scheme = useColorScheme() === 'dark' ? 'dark' : 'light';
@@ -63,10 +63,10 @@ export function VenueMap({ pins, selectedId, onSelect, showUserLocation, bottomI
     const map = mapRef.current;
     if (!L || !map) return;
     tilesRef.current?.remove();
-    tilesRef.current = L.tileLayer(TILES[scheme], {
+    tilesRef.current = L.tileLayer(TILE_URL, {
       attribution: ATTRIBUTION,
-      subdomains: 'abcd',
-      maxZoom: 20,
+      maxZoom: 19,
+      className: scheme === 'dark' ? 'hoppr-tiles-dark' : 'hoppr-tiles-light',
     }).addTo(map);
   }, [scheme, tick]);
 
@@ -136,7 +136,9 @@ export function VenueMap({ pins, selectedId, onSelect, showUserLocation, bottomI
   return (
     <div
       ref={containerRef}
-      style={{ position: 'absolute', inset: 0, backgroundColor: Colors[scheme].background }}
+      // zIndex 0 gives the map its own stacking context. Without it, Leaflet's internal layers
+      // (z-index 400+) paint over the sheet and the other overlays drawn after the map.
+      style={{ position: 'absolute', inset: 0, zIndex: 0, backgroundColor: Colors[scheme].background }}
       aria-label="Map of bars"
     />
   );
