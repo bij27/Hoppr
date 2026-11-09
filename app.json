@@ -33,7 +33,13 @@
           "imageWidth": 76
         }
       ],
-      "expo-sqlite"
+      "expo-sqlite",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Hoppr uses your location to show bars near you and walking times between them."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

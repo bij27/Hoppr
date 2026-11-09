@@ -5,19 +5,20 @@ import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { type DealStatus, statusLabel } from '@/lib/deals';
 
+/** A dot and a few words: amber when live, ink when starting soon, gray otherwise. */
 export function StatusBadge({ status, now }: { status: DealStatus; now: Date }) {
   const theme = useTheme();
-  const colors =
+  const tone =
     status.kind === 'active'
-      ? { bg: theme.liveSoft, fg: theme.live }
+      ? { dot: theme.live, text: theme.liveText }
       : status.kind === 'upcoming'
-        ? { bg: theme.accentSoft, fg: theme.accent }
-        : { bg: theme.backgroundElement, fg: theme.textSecondary };
+        ? { dot: theme.text, text: theme.text }
+        : { dot: theme.pinIdle, text: theme.textSecondary };
 
   return (
-    <View style={[styles.badge, { backgroundColor: colors.bg }]}>
-      {status.kind === 'active' && <View style={[styles.dot, { backgroundColor: colors.fg }]} />}
-      <ThemedText type="smallBold" style={{ color: colors.fg }}>
+    <View style={styles.row}>
+      <View style={[styles.dot, { backgroundColor: tone.dot }]} />
+      <ThemedText type="captionStrong" style={{ color: tone.text }}>
         {statusLabel(status, now)}
       </ThemedText>
     </View>
@@ -25,14 +26,6 @@ export function StatusBadge({ status, now }: { status: DealStatus; now: Date }) 
 }
 
 const styles = StyleSheet.create({
-  badge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    alignSelf: 'flex-start',
-    gap: Spacing.one + Spacing.half,
-    paddingVertical: Spacing.half,
-    paddingHorizontal: Spacing.two,
-    borderRadius: 999,
-  },
-  dot: { width: 7, height: 7, borderRadius: 4 },
+  row: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
+  dot: { width: 8, height: 8, borderRadius: 4 },
 });

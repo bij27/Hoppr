@@ -23,8 +23,10 @@ npx expo lint
 
 | Path | What's there |
 |---|---|
-| `src/app/` | Screens (Expo Router). `(tabs)/index.tsx` = Deals, `(tabs)/crawl.tsx` = Crawl planner, `venue/[id].tsx` = venue page |
-| `src/lib/` | Core logic, no UI. `time.ts` (timezone-aware deal windows), `crawl.ts` (route planner), `deals.ts`, `format.ts`, `geo.ts` |
+| `src/app/` | Screens (Expo Router). `index.tsx` = map home with the pull-up list, `crawl.tsx` = crawl planner, `venue/[id].tsx` = venue page |
+| `src/components/` | UI pieces. `map/` (react-native-maps on iOS/Android, Leaflet on web), `bottom-sheet.tsx` |
+| `src/constants/theme.ts` | Design tokens ("ink & amber" colors, spacing, radius). Add colors here, not in screens |
+| `src/lib/` | Core logic, no UI. `time.ts` (timezone-aware deal windows), `crawl.ts` (route planner), `feed.ts` (home filtering/ranking), `deals.ts`, `format.ts`, `geo.ts` |
 | `src/data/` | Data access. `venues.ts` is the only place screens get venue data from |
 | `src/state/` | App-wide state (loaded venues, current crawl) |
 | `supabase/migrations/` | Database schema (Postgres + PostGIS) |
@@ -46,3 +48,10 @@ the **fictional sample bars** in `src/data/fixtures.ts`. Production builds never
 
 Schema changes live in `supabase/migrations/`. Each new file must be run once against the
 database, in filename order (currently by pasting it into the Supabase SQL Editor).
+
+## Maps
+
+- iOS uses Apple Maps and needs no key. Android uses Google Maps: it works in Expo Go, but store
+  builds need a Google Maps API key (react-native-maps config plugin, `androidGoogleMapsApiKey`).
+- Web uses Leaflet with CARTO basemap tiles (OpenStreetMap data). Fine for development; check
+  CARTO's terms or switch tile providers before a public launch.
