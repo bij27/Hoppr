@@ -3,7 +3,7 @@ import { useEffect, useRef } from 'react';
 import { StyleSheet, View } from 'react-native';
 import MapView, { Marker, type MapPressEvent } from 'react-native-maps';
 
-import { MARKET_CENTER } from '@/constants/theme';
+import { MARKET_CENTER, toneColors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -74,7 +74,7 @@ export function VenueMap({ pins, selectedId, onSelect, showUserLocation, bottomI
 
 function Pin({ pin, selected }: { pin: MapPin; selected: boolean }) {
   const theme = useTheme();
-  const fill = pin.tone === 'live' ? theme.live : pin.tone === 'soon' ? theme.text : theme.pinIdle;
+  const fill = toneColors(theme, pin.tone).fill;
   const size = selected ? 26 : 18;
   return (
     <View style={styles.hit}>

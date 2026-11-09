@@ -1,9 +1,10 @@
 /**
- * Hoppr design tokens: "ink & amber".
+ * Hoppr design tokens.
  *
- * Ink and warm white do almost all the work, like printed type on paper. Amber is reserved for
- * one meaning, "a deal is live", so it always carries information. Primary actions are solid
- * ink buttons. Keep new colors out of screens; add a token here instead.
+ * Ink and warm white do almost all the work, like printed type on paper. The only other colors
+ * are the deal-status signals, used consistently for pins, status text and timeline dots:
+ *   green = live now, amber = starts within a few hours, red = nothing on soon.
+ * Primary actions are solid ink buttons. Keep new colors out of screens; add a token here.
  */
 
 import '@/global.css';
@@ -25,15 +26,16 @@ export const Colors = {
     /** Solid ink buttons. */
     primary: '#111111',
     onPrimary: '#FFFFFF',
-    /** "Live now": fills (dots, pins). */
-    live: '#D99A2B',
-    /** "Live now": text on light backgrounds (darker for contrast). */
-    liveText: '#8F5E0A',
-    liveSoft: '#FBF1DD',
+    /** Deal status fills (pins, dots) and matching text (darker, for contrast on light). */
+    live: '#2E9E5B',
+    liveText: '#1D7A42',
+    liveSoft: '#E4F4EA',
+    soon: '#E89B2E',
+    soonText: '#9A5A00',
+    idle: '#D2483B',
+    idleText: '#B13A2E',
     /** A planned stop that misses its deal. */
-    warning: '#A23B2A',
-    /** Pins for bars with nothing on soon. */
-    pinIdle: '#B9B3AA',
+    warning: '#B13A2E',
     scrim: 'rgba(17,17,17,0.08)',
   },
   dark: {
@@ -46,16 +48,36 @@ export const Colors = {
     textTertiary: '#77726B',
     primary: '#F2EFEA',
     onPrimary: '#111111',
-    live: '#E3A73E',
-    liveText: '#EDB95C',
-    liveSoft: '#2B2213',
-    warning: '#E5836B',
-    pinIdle: '#5C5852',
+    live: '#4CC27A',
+    liveText: '#6AD293',
+    liveSoft: '#13291C',
+    soon: '#F0AE48',
+    soonText: '#F4C06C',
+    idle: '#E5675A',
+    idleText: '#EE8478',
+    warning: '#EE8478',
     scrim: 'rgba(0,0,0,0.4)',
   },
 } as const;
 
 export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;
+
+export type DealTone = 'live' | 'soon' | 'idle';
+
+/** Fill (pins, dots) and text color for a deal status. */
+export function toneColors(
+  c: (typeof Colors)['light'] | (typeof Colors)['dark'],
+  tone: DealTone,
+): { fill: string; text: string } {
+  switch (tone) {
+    case 'live':
+      return { fill: c.live, text: c.liveText };
+    case 'soon':
+      return { fill: c.soon, text: c.soonText };
+    case 'idle':
+      return { fill: c.idle, text: c.idleText };
+  }
+}
 
 export const Fonts = Platform.select({
   ios: { sans: 'system-ui', serif: 'ui-serif', mono: 'ui-monospace' },

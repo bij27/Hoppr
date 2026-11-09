@@ -10,7 +10,7 @@ import 'leaflet/dist/leaflet.css';
 import type * as Leaflet from 'leaflet';
 import { useEffect, useRef, useState } from 'react';
 
-import { Colors, MARKET_CENTER } from '@/constants/theme';
+import { Colors, MARKET_CENTER, toneColors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
 import type { MapPin, VenueMapProps } from './types';
@@ -82,7 +82,7 @@ export function VenueMap({ pins, selectedId, onSelect, showUserLocation, bottomI
         icon: pinIcon(L, pin, selected, scheme),
         title: pin.label,
         keyboard: true,
-        zIndexOffset: selected ? 1000 : pin.tone === 'live' ? 500 : 0,
+        zIndexOffset: selected ? 1000 : pin.tone === 'live' ? 500 : pin.tone === 'soon' ? 250 : 0,
       })
         .on('click', (e) => {
           L.DomEvent.stopPropagation(e);
@@ -146,7 +146,7 @@ export function VenueMap({ pins, selectedId, onSelect, showUserLocation, bottomI
 
 function pinIcon(L: typeof Leaflet, pin: MapPin, selected: boolean, scheme: 'light' | 'dark'): Leaflet.DivIcon {
   const c = Colors[scheme];
-  const fill = pin.tone === 'live' ? c.live : pin.tone === 'soon' ? c.text : c.pinIdle;
+  const fill = toneColors(c, pin.tone).fill;
   const size = selected ? 26 : 18;
   return L.divIcon({
     className: '',
