@@ -33,11 +33,11 @@ export default function VenueScreen() {
     );
   }
 
-  const inCrawl = crawl.has(venue.id);
-  const onToggle = () => {
-    const ok = crawl.toggle(venue.id);
-    setNotice(ok ? null : 'Your crawl is full. Remove a stop to add another.');
-  };
+  const pickedDealIds = crawl.dealIdsFor(venue.id);
+  const inCrawl = pickedDealIds !== undefined;
+  const fullNotice = 'Your crawl is full. Remove a stop to add another.';
+  const onToggle = () => setNotice(crawl.toggleVenue(venue) ? null : fullNotice);
+  const onToggleDeal = (dealId: string) => setNotice(crawl.toggleDeal(venue, dealId) ? null : fullNotice);
   const openDirections = () => {
     const { lat, lng } = venue.location;
     Linking.openURL(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=walking`).catch(() =>
@@ -68,7 +68,7 @@ export default function VenueScreen() {
                 pressed && styles.pressed,
               ]}>
               <ThemedText type="smallBold" style={{ color: inCrawl ? theme.text : theme.onAccent }}>
-                {inCrawl ? 'Remove from crawl' : 'Add to crawl'}
+                {inCrawl ? 'Remove from crawl' : 'Add whole bar to crawl'}
               </ThemedText>
             </Pressable>
             <Pressable
@@ -109,14 +109,41 @@ export default function VenueScreen() {
                 </ThemedText>
               )}
               <StatusBadge status={dealStatus([d], now)} now={now} />
-              <ThemedText type="small" themeColor="textSecondary">
-                {formatVerified(d.lastVerifiedAt, now)}
-              </ThemedText>
+              <View style={styles.dealFooter}>
+                <ThemedText type="small" themeColor="textSecondary" style={styles.flex}>
+                  {formatVerified(d.lastVerifiedAt, now)}
+                </ThemedText>
+                <DealCrawlButton
+                  picked={pickedDealIds?.includes(d.id) ?? false}
+                  title={d.title}
+                  onPress={() => onToggleDeal(d.id)}
+                />
+              </View>
             </ThemedView>
           ))}
         </View>
       </ScrollView>
     </ThemedView>
+  );
+}
+
+function DealCrawlButton({ picked, title, onPress }: { picked: boolean; title: string; onPress: () => void }) {
+  const theme = useTheme();
+  return (
+    <Pressable
+      onPress={onPress}
+      hitSlop={8}
+      accessibilityRole="button"
+      accessibilityLabel={picked ? `Remove ${title} from crawl` : `Add ${title} to crawl`}
+      style={({ pressed }) => [
+        styles.dealButton,
+        picked ? { backgroundColor: theme.accent } : { borderColor: theme.accent, borderWidth: 1.5 },
+        pressed && styles.pressed,
+      ]}>
+      <ThemedText type="smallBold" style={{ color: picked ? theme.onAccent : theme.accent }}>
+        {picked ? '✓ In crawl' : '+ Crawl'}
+      </ThemedText>
+    </Pressable>
   );
 }
 
@@ -140,4 +167,11 @@ const styles = StyleSheet.create({
   deal: { padding: Spacing.three, borderRadius: Spacing.three, gap: Spacing.one + Spacing.half },
   dealHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', gap: Spacing.two },
   dealTitle: { flex: 1, fontWeight: 700 },
+  dealFooter: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
+  flex: { flex: 1 },
+  dealButton: {
+    paddingVertical: Spacing.one + Spacing.half,
+    paddingHorizontal: Spacing.two + Spacing.one,
+    borderRadius: 999,
+  },
 });

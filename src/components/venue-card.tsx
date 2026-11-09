@@ -13,7 +13,8 @@ type VenueCardProps = {
   venue: Venue;
   status: DealStatus;
   now: Date;
-  inCrawl: boolean;
+  /** Deals picked for the crawl at this venue; undefined if the venue isn't in the crawl. */
+  pickedDealIds: readonly string[] | undefined;
   onToggleCrawl: () => void;
 };
 
@@ -21,8 +22,11 @@ type VenueCardProps = {
  * The crawl button is a SIBLING of the tappable body, not a child, so tapping it never also
  * opens the venue. (Not using <Link asChild>: Expo Router's Slot rejects Pressable's style callback.)
  */
-export function VenueCard({ venue, status, now, inCrawl, onToggleCrawl }: VenueCardProps) {
+export function VenueCard({ venue, status, now, pickedDealIds, onToggleCrawl }: VenueCardProps) {
   const theme = useTheme();
+  const inCrawl = pickedDealIds !== undefined;
+  const partial = inCrawl && venue.deals.some((d) => !pickedDealIds.includes(d.id));
+  const picked = partial ? venue.deals.filter((d) => pickedDealIds.includes(d.id)).length : 0;
   const router = useRouter();
   const shown = venue.deals.slice(0, 2);
   const more = venue.deals.length - shown.length;
@@ -74,7 +78,7 @@ export function VenueCard({ venue, status, now, inCrawl, onToggleCrawl }: VenueC
           pressed && styles.pressed,
         ]}>
         <ThemedText type="smallBold" style={{ color: inCrawl ? theme.onAccent : theme.accent }}>
-          {inCrawl ? '✓ In crawl' : '+ Crawl'}
+          {!inCrawl ? '+ Crawl' : partial ? `✓ ${picked} ${picked === 1 ? 'deal' : 'deals'}` : '✓ In crawl'}
         </ThemedText>
       </Pressable>
     </View>

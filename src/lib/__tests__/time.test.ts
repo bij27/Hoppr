@@ -1,6 +1,15 @@
 import { describe, expect, it } from 'vitest';
 
-import { activeMask, isScheduleActive, localTime, utcOffsetMinutes, validateSchedule } from '../time';
+import {
+  activeMask,
+  addDays,
+  isScheduleActive,
+  localDate,
+  localTime,
+  utcOffsetMinutes,
+  validateSchedule,
+  zonedTimeToMs,
+} from '../time';
 
 const WEEKDAYS = [1, 2, 3, 4, 5];
 
@@ -114,5 +123,31 @@ describe('activeMask', () => {
 
   it('returns an empty mask for no schedules', () => {
     expect(Array.from(activeMask([], new Date(), 5))).toEqual([0, 0, 0, 0, 0]);
+  });
+});
+
+describe('localDate / addDays', () => {
+  it('uses the Fort Lauderdale calendar date, not UTC', () => {
+    // 11:30 PM Mon Nov 9 local = 04:30 UTC Tue Nov 10
+    expect(localDate(new Date('2026-11-10T04:30:00Z'))).toEqual({ year: 2026, month: 11, day: 9, weekday: 1 });
+  });
+
+  it('rolls over months and years', () => {
+    expect(addDays({ year: 2026, month: 12, day: 30, weekday: 3 }, 3)).toEqual({ year: 2027, month: 1, day: 2, weekday: 6 });
+  });
+});
+
+describe('zonedTimeToMs', () => {
+  it('converts local wall time to an instant in standard and daylight time', () => {
+    expect(new Date(zonedTimeToMs({ year: 2026, month: 11, day: 11 }, 16 * 60)).toISOString()).toBe('2026-11-11T21:00:00.000Z');
+    expect(new Date(zonedTimeToMs({ year: 2026, month: 7, day: 1 }, 16 * 60)).toISOString()).toBe('2026-07-01T20:00:00.000Z');
+  });
+
+  it('handles the day DST ends (Nov 1 2026)', () => {
+    expect(new Date(zonedTimeToMs({ year: 2026, month: 11, day: 1 }, 17 * 60)).toISOString()).toBe('2026-11-01T22:00:00.000Z');
+  });
+
+  it('treats minutes past 1440 as the next day', () => {
+    expect(zonedTimeToMs({ year: 2026, month: 11, day: 11 }, 1440 + 60)).toBe(zonedTimeToMs({ year: 2026, month: 11, day: 12 }, 60));
   });
 });

@@ -7,6 +7,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { VenueCard } from '@/components/venue-card';
 import { BottomTabInset, MaxContentWidth, Spacing, WebTopInset } from '@/constants/theme';
+import type { Venue } from '@/data/types';
 import { useNow } from '@/hooks/use-now';
 import { useTheme } from '@/hooks/use-theme';
 import { dealStatus, type DealStatus } from '@/lib/deals';
@@ -58,8 +59,8 @@ export default function DealsScreen() {
       .sort((a, b) => rank(a.status) - rank(b.status) || a.venue.name.localeCompare(b.venue.name));
   }, [venues, now, filter]);
 
-  const toggle = (id: string) => {
-    const ok = crawl.toggle(id);
+  const toggle = (venue: Venue) => {
+    const ok = crawl.toggleVenue(venue);
     setNotice(ok ? null : 'Your crawl is full. Remove a stop to add another.');
   };
 
@@ -97,8 +98,8 @@ export default function DealsScreen() {
               venue={item.venue}
               status={item.status}
               now={now}
-              inCrawl={crawl.has(item.venue.id)}
-              onToggleCrawl={() => toggle(item.venue.id)}
+              pickedDealIds={crawl.dealIdsFor(item.venue.id)}
+              onToggleCrawl={() => toggle(item.venue)}
             />
           )}
           ListEmptyComponent={

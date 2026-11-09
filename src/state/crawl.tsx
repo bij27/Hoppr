@@ -2,52 +2,65 @@ import { createContext, type ReactNode, useCallback, useContext, useMemo, useSta
 
 import { MAX_CRAWL_STOPS } from '@/lib/crawl';
 
+import { type CrawlStop, removeVenue, toggleDeal, toggleVenue, type VenueRef } from './crawl-stops';
+
 type CrawlState = {
-  stopIds: readonly string[];
+  stops: readonly CrawlStop[];
   isFull: boolean;
   has: (venueId: string) => boolean;
-  /** Returns false if the crawl is already full. Adding an existing stop is a no-op that returns true. */
-  add: (venueId: string) => boolean;
+  /** Selected deal ids for a venue, or undefined if the venue isn't in the crawl. */
+  dealIdsFor: (venueId: string) => readonly string[] | undefined;
+  /** Adds the whole bar or removes it. Returns false if the crawl is already full. */
+  toggleVenue: (venue: VenueRef) => boolean;
+  /** Adds or removes a single deal. Returns false if adding would need a new stop and the crawl is full. */
+  toggleDeal: (venue: VenueRef, dealId: string) => boolean;
   remove: (venueId: string) => void;
-  toggle: (venueId: string) => boolean;
   clear: () => void;
 };
 
 const CrawlContext = createContext<CrawlState | null>(null);
 
 export function CrawlProvider({ children }: { children: ReactNode }) {
-  const [stopIds, setStopIds] = useState<string[]>([]);
+  const [stops, setStops] = useState<CrawlStop[]>([]);
 
-  const has = useCallback((id: string) => stopIds.includes(id), [stopIds]);
+  const dealIdsFor = useCallback((id: string) => stops.find((s) => s.venueId === id)?.dealIds, [stops]);
+  const has = useCallback((id: string) => stops.some((s) => s.venueId === id), [stops]);
 
-  const add = useCallback(
-    (id: string) => {
-      if (stopIds.includes(id)) return true;
-      if (stopIds.length >= MAX_CRAWL_STOPS) return false;
-      setStopIds((prev) => (prev.includes(id) || prev.length >= MAX_CRAWL_STOPS ? prev : [...prev, id]));
-      return true;
+  // Compute the result from current state to report ok/full synchronously, then apply the same
+  // transition with an updater so rapid taps never act on stale state.
+  const onToggleVenue = useCallback(
+    (venue: VenueRef) => {
+      const { ok } = toggleVenue(stops, venue);
+      if (ok) setStops((prev) => toggleVenue(prev, venue).stops);
+      return ok;
     },
-    [stopIds],
+    [stops],
   );
 
-  const remove = useCallback((id: string) => setStopIds((prev) => prev.filter((x) => x !== id)), []);
-
-  const toggle = useCallback(
-    (id: string) => {
-      if (stopIds.includes(id)) {
-        remove(id);
-        return true;
-      }
-      return add(id);
+  const onToggleDeal = useCallback(
+    (venue: VenueRef, dealId: string) => {
+      const { ok } = toggleDeal(stops, venue, dealId);
+      if (ok) setStops((prev) => toggleDeal(prev, venue, dealId).stops);
+      return ok;
     },
-    [stopIds, add, remove],
+    [stops],
   );
 
-  const clear = useCallback(() => setStopIds([]), []);
+  const remove = useCallback((id: string) => setStops((prev) => removeVenue(prev, id)), []);
+  const clear = useCallback(() => setStops([]), []);
 
   const value = useMemo<CrawlState>(
-    () => ({ stopIds, isFull: stopIds.length >= MAX_CRAWL_STOPS, has, add, remove, toggle, clear }),
-    [stopIds, has, add, remove, toggle, clear],
+    () => ({
+      stops,
+      isFull: stops.length >= MAX_CRAWL_STOPS,
+      has,
+      dealIdsFor,
+      toggleVenue: onToggleVenue,
+      toggleDeal: onToggleDeal,
+      remove,
+      clear,
+    }),
+    [stops, has, dealIdsFor, onToggleVenue, onToggleDeal, remove, clear],
   );
 
   return <CrawlContext.Provider value={value}>{children}</CrawlContext.Provider>;

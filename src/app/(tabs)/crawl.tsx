@@ -11,12 +11,20 @@ import { useNow } from '@/hooks/use-now';
 import { useTheme } from '@/hooks/use-theme';
 import { MAX_CRAWL_STOPS, planCrawl } from '@/lib/crawl';
 import { formatClock, formatDuration } from '@/lib/format';
+import { addDays, localDate, zonedTimeToMs } from '@/lib/time';
 import { useCrawl } from '@/state/crawl';
+import { isWholeVenue, selectedDeals } from '@/state/crawl-stops';
 import { useVenues } from '@/state/venues';
 
 const MS_PER_HOUR = 3_600_000;
 const START_OPTIONS = 8;
 const DWELL_OPTIONS = [30, 45, 60, 90];
+const DAYS_AHEAD = 7;
+/** Start hours offered for days after today: 11 AM – 11 PM. */
+const FUTURE_HOURS = Array.from({ length: 13 }, (_, i) => 11 + i);
+const DEFAULT_FUTURE_START_MIN = 16 * 60;
+const DAY_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const DAY_LONG = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 export default function CrawlScreen() {
   const theme = useTheme();
@@ -24,42 +32,62 @@ export default function CrawlScreen() {
   const now = useNow();
   const { byId } = useVenues();
   const crawl = useCrawl();
-  // null = start now. Otherwise an absolute start time (top of an upcoming hour).
+  // 0 = today. Picking a later day always sets an explicit start time.
+  const [dayOffset, setDayOffset] = useState(0);
+  // null = start now. Otherwise an absolute start time (top of an hour).
   const [startAtMs, setStartAtMs] = useState<number | null>(null);
   const [dwellMin, setDwellMin] = useState(45);
 
-  // Fort Lauderdale's UTC offset is a whole number of hours, so UTC hour boundaries are local ones.
-  const hourOptions = useMemo(() => {
-    const firstHour = (Math.floor(now.getTime() / MS_PER_HOUR) + 1) * MS_PER_HOUR;
-    return Array.from({ length: START_OPTIONS }, (_, i) => firstHour + i * MS_PER_HOUR);
-  }, [now]);
+  const today = localDate(now);
+  const days = Array.from({ length: DAYS_AHEAD }, (_, i) => addDays(today, i));
+  const day = days[dayOffset];
+  const dayLabel = (i: number) => (i === 0 ? 'Today' : i === 1 ? 'Tomorrow' : DAY_SHORT[days[i].weekday]);
+
+  // Today: the next few hours (Fort Lauderdale's UTC offset is whole hours, so UTC hour
+  // boundaries are local ones). Later days: a fixed range of local start hours.
+  const hourOptions =
+    dayOffset === 0
+      ? Array.from({ length: START_OPTIONS }, (_, i) => (Math.floor(now.getTime() / MS_PER_HOUR) + 1 + i) * MS_PER_HOUR)
+      : FUTURE_HOURS.map((h) => zonedTimeToMs(day, h * 60));
+
+  const pickDay = (offset: number) => {
+    setDayOffset(offset);
+    setStartAtMs(offset === 0 ? null : zonedTimeToMs(days[offset], DEFAULT_FUTURE_START_MIN));
+  };
 
   // A chosen start time that has already passed falls back to "now".
   const effectiveStartMs = startAtMs !== null && startAtMs > now.getTime() ? startAtMs : null;
   const startMs = effectiveStartMs ?? now.getTime();
 
-  const venues = useMemo(
-    () => crawl.stopIds.map((id) => byId.get(id)).filter((v) => v !== undefined),
-    [crawl.stopIds, byId],
+  // Each stop with the deals it's for. The planner only times visits against those deals.
+  const entries = useMemo(
+    () =>
+      crawl.stops.flatMap((stop) => {
+        const venue = byId.get(stop.venueId);
+        if (!venue) return [];
+        return [{ venue, deals: selectedDeals(stop, venue.deals), whole: isWholeVenue(stop, venue.deals) }];
+      }),
+    [crawl.stops, byId],
   );
+  const entryById = useMemo(() => new Map(entries.map((e) => [e.venue.id, e])), [entries]);
 
   const plan = useMemo(
     () =>
       planCrawl(
-        venues.map((v) => ({ id: v.id, location: v.location, schedules: v.deals })),
+        entries.map((e) => ({ id: e.venue.id, location: e.venue.location, schedules: e.deals })),
         { start: new Date(startMs), dwellMin },
       ),
-    [venues, dwellMin, startMs],
+    [entries, dwellMin, startMs],
   );
 
-  if (venues.length === 0) {
+  if (entries.length === 0) {
     return (
       <ThemedView style={styles.container}>
         <SafeAreaView edges={['top']} style={[styles.safeArea, styles.emptyState]}>
           <ThemedText type="subtitle">Plan a crawl</ThemedText>
           <ThemedText themeColor="textSecondary" style={styles.centerText}>
-            Add up to {MAX_CRAWL_STOPS} bars from the Deals tab. Hoppr orders them so you hit each happy hour
-            while it’s live.
+            Add up to {MAX_CRAWL_STOPS} bars, or just the deals you want, from the Deals tab. Hoppr orders them so
+            you hit each deal while it’s live.
           </ThemedText>
           <Pressable
             onPress={() => router.navigate('/')}
@@ -93,7 +121,14 @@ export default function CrawlScreen() {
             START
           </ThemedText>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipsRow}>
-            <Chip label="Now" selected={effectiveStartMs === null} onPress={() => setStartAtMs(null)} />
+            {days.map((d, i) => (
+              <Chip key={i} label={dayLabel(i)} selected={dayOffset === i} onPress={() => pickDay(i)} />
+            ))}
+          </ScrollView>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipsRow}>
+            {dayOffset === 0 && (
+              <Chip label="Now" selected={effectiveStartMs === null} onPress={() => setStartAtMs(null)} />
+            )}
             {hourOptions.map((ms) => (
               <Chip
                 key={ms}
@@ -115,24 +150,26 @@ export default function CrawlScreen() {
 
           <ThemedView type="backgroundElement" style={styles.summary}>
             <ThemedText style={styles.bold}>
+              {dayOffset > 0 && `${DAY_LONG[day.weekday]} · `}
               {formatClock(plan.start)} – {formatClock(plan.end)}
             </ThemedText>
             <ThemedText type="small" themeColor="textSecondary">
-              {plan.stopsWithDeal} of {plan.stops.length} stops during happy hour ·{' '}
+              {plan.stopsWithDeal} of {plan.stops.length} stops during a deal ·{' '}
               {formatDuration(plan.totalWalkMin)} walking
             </ThemedText>
             {missed > 0 && (
               <ThemedText type="small" style={{ color: theme.warning }}>
-                {missed === 1 ? '1 stop misses' : `${missed} stops miss`} its happy hour. Try a different start time or
-                swap the bar.
+                {missed === 1 ? '1 stop misses its deal' : `${missed} stops miss their deals`}. Try a different day
+                or start time, or swap the bar.
               </ThemedText>
             )}
           </ThemedView>
 
           <View>
             {plan.stops.map((stop, index) => {
-              const venue = byId.get(stop.id);
-              if (!venue) return null;
+              const entry = entryById.get(stop.id);
+              if (!entry) return null;
+              const { venue } = entry;
               return (
                 <Fragment key={stop.id}>
                   {index > 0 && (
@@ -162,12 +199,17 @@ export default function CrawlScreen() {
                       <Link href={{ pathname: '/venue/[id]', params: { id: venue.id } }}>
                         <ThemedText style={styles.bold}>{venue.name}</ThemedText>
                       </Link>
+                      {!entry.whole && (
+                        <ThemedText type="small" themeColor="textSecondary" numberOfLines={2}>
+                          For: {entry.deals.map((d) => d.title).join(' · ')}
+                        </ThemedText>
+                      )}
                       <ThemedText type="small" style={{ color: stop.catchesDeal ? theme.live : theme.warning }}>
                         {stop.catchesDeal
-                          ? `Happy hour for ${formatDuration(stop.dealMin)} of your visit`
+                          ? `Deal on for ${formatDuration(stop.dealMin)} of your visit`
                           : stop.dealMin > 0
-                            ? `Only ${formatDuration(stop.dealMin)} of happy hour left`
-                            : 'No happy hour during your visit'}
+                            ? `Only ${formatDuration(stop.dealMin)} of the deal left`
+                            : 'No deal during your visit'}
                       </ThemedText>
                     </View>
                     <Pressable

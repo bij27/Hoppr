@@ -98,6 +98,32 @@ export function utcOffsetMinutes(date: Date, tz: string = MARKET_TZ): number {
   return Math.round((asUtc - ms) / MS_PER_MINUTE);
 }
 
+export type LocalDate = { year: number; month: number; day: number; weekday: DayOfWeek };
+
+/** The calendar date at `date` in `tz` (month is 1–12). */
+export function localDate(date: Date, tz: string = MARKET_TZ): LocalDate {
+  const p = zonedParts(date.getTime(), tz);
+  return { year: p.year, month: p.month, day: p.day, weekday: p.weekday };
+}
+
+/** The calendar date `n` days after `d` (pure calendar math, no timezone involved). */
+export function addDays(d: LocalDate, n: number): LocalDate {
+  const t = new Date(Date.UTC(d.year, d.month - 1, d.day + n));
+  return { year: t.getUTCFullYear(), month: t.getUTCMonth() + 1, day: t.getUTCDate(), weekday: t.getUTCDay() as DayOfWeek };
+}
+
+/**
+ * The instant when the wall clock in `tz` reads `minute` minutes after midnight on date `d`.
+ * `minute` may exceed 1440 to mean the following day. During the spring-forward gap the
+ * result lands just after the jump.
+ */
+export function zonedTimeToMs(d: Pick<LocalDate, 'year' | 'month' | 'day'>, minute: number, tz: string = MARKET_TZ): number {
+  const asUtc = Date.UTC(d.year, d.month - 1, d.day, 0, minute);
+  // Guess with the offset at the naive instant, then correct with the offset at the guess.
+  const guess = asUtc - utcOffsetMinutes(new Date(asUtc), tz) * MS_PER_MINUTE;
+  return asUtc - utcOffsetMinutes(new Date(guess), tz) * MS_PER_MINUTE;
+}
+
 export function isScheduleActive(s: DealSchedule, t: LocalTime): boolean {
   if (s.startMin === s.endMin) return false; // invalid; rejected by validateSchedule + DB constraint
   if (s.startMin < s.endMin) {
