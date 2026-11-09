@@ -35,7 +35,14 @@ Times are stored as the bar's local wall-clock minutes (`960` = 4 PM). A deal li
 "Fri 11 PM – 2 AM" is stored on Friday with `start=1380, end=120`; the app treats an end at or
 before the start as running past midnight. Daylight saving is handled; see `src/lib/__tests__/time.test.ts`.
 
-## Data status
+## Data
 
-`src/data/fixtures.ts` holds **fictional sample bars** for development only. Real venues go into
-the database once the Supabase project is set up.
+The app reads venues from Supabase through the `get_venues()` database function
+(`src/data/venues.ts` → `src/lib/supabase.ts`). Copy `.env.example` to `.env` and fill in the
+project URL and publishable key.
+
+In development, if the database has no published venues yet (or `.env` is missing), the app shows
+the **fictional sample bars** in `src/data/fixtures.ts`. Production builds never show them.
+
+Schema changes live in `supabase/migrations/`. Each new file must be run once against the
+database, in filename order (currently by pasting it into the Supabase SQL Editor).
