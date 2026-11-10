@@ -41,6 +41,7 @@ export default function RootLayout() {
                 <Stack.Screen name="index" options={{ headerShown: false, title: 'Hoppr' }} />
                 <Stack.Screen name="venue/[id]" options={{ title: '' }} />
                 <Stack.Screen name="crawl" options={{ title: '' }} />
+                <Stack.Screen name="suggest" options={{ title: '' }} />
               </Stack>
             </FeedbackProvider>
           </CrawlProvider>

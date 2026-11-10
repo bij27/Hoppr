@@ -1,40 +1,14 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
-
 import { isoDate } from '@/lib/format';
 import { supabase } from '@/lib/supabase';
 import { localDate } from '@/lib/time';
 
+import { db as client, ensureUserId, UNIQUE_VIOLATION, UserFacingError as FeedbackError } from './session';
 import type { ReportReason } from './types';
 
 /** "ok" = recorded; "already" = this person already did it for this deal today. */
 export type FeedbackResult = 'ok' | 'already';
 
-/** Thrown with a message that's safe to show the user. */
-export class FeedbackError extends Error {}
-
-const UNIQUE_VIOLATION = '23505';
-
-/** Whether this build can send feedback at all (false when using development fixtures). */
-export const feedbackEnabled = supabase !== null;
-
-function client(): SupabaseClient {
-  if (!supabase) throw new FeedbackError('Feedback isn’t available in this build.');
-  return supabase;
-}
-
-/**
- * The current user's id. People who haven't signed in get a silent anonymous account the first
- * time they confirm or report, never just for browsing. Later, signing in with Apple or Google
- * upgrades that same account, so their history carries over.
- */
-async function ensureUserId(): Promise<string> {
-  const db = client();
-  const { data } = await db.auth.getSession();
-  if (data.session) return data.session.user.id;
-  const { data: signedIn, error } = await db.auth.signInAnonymously();
-  if (error || !signedIn.user) throw new FeedbackError('Couldn’t connect right now. Try again in a moment.');
-  return signedIn.user.id;
-}
+export { UserFacingError as FeedbackError, backendEnabled as feedbackEnabled } from './session';
 
 async function insertOnce(table: 'deal_confirmations' | 'deal_reports', row: Record<string, unknown>): Promise<FeedbackResult> {
   await ensureUserId();

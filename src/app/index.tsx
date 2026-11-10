@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { ActivityIndicator, FlatList, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { ActivityIndicator, FlatList, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BottomSheet } from '@/components/bottom-sheet';
@@ -172,6 +172,21 @@ export default function HomeScreen() {
               onToggleCrawl={() => toggleCrawl(item.venue)}
             />
           )}
+          ListFooterComponent={
+            loading ? undefined : (
+              <Pressable
+                onPress={() => router.push('/suggest')}
+                accessibilityRole="button"
+                style={({ pressed }) => [styles.suggest, pressed && styles.pressed]}>
+                <ThemedText type="caption" themeColor="textSecondary" style={styles.center}>
+                  Know a happy hour we’re missing?{' '}
+                  <ThemedText type="captionStrong" style={styles.underline}>
+                    Suggest it
+                  </ThemedText>
+                </ThemedText>
+              </Pressable>
+            )
+          }
           ListEmptyComponent={
             loading ? (
               <ActivityIndicator style={styles.empty} color={theme.text} />
@@ -252,6 +267,9 @@ const styles = StyleSheet.create({
   list: { paddingHorizontal: Spacing.two, width: '100%', maxWidth: MaxContentWidth, alignSelf: 'center' },
   separator: { height: StyleSheet.hairlineWidth, marginHorizontal: Spacing.three },
   empty: { alignItems: 'center', gap: Spacing.three, paddingVertical: Spacing.five, paddingHorizontal: Spacing.four },
+  suggest: { paddingVertical: Spacing.four, paddingHorizontal: Spacing.four, alignItems: 'center' },
+  underline: { textDecorationLine: 'underline' },
+  pressed: { opacity: 0.6 },
   crawlBar: { position: 'absolute', left: Spacing.three, right: Spacing.three, alignItems: 'center' },
   crawlButton: { width: '100%', maxWidth: MaxContentWidth },
   count: {

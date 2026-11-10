@@ -1,4 +1,4 @@
-import { Stack, useLocalSearchParams } from 'expo-router';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { Fragment, useState } from 'react';
 import { Linking, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
@@ -25,6 +25,7 @@ export default function VenueScreen() {
   const now = useNow();
   const { byId, loading } = useVenues();
   const crawl = useCrawl();
+  const router = useRouter();
   const [notice, setNotice] = useState<string | null>(null);
   const venue = typeof id === 'string' ? byId.get(id) : undefined;
 
@@ -132,6 +133,18 @@ export default function VenueScreen() {
               );
             })}
           </View>
+
+          <Pressable
+            onPress={() => router.push({ pathname: '/suggest', params: { venueId: venue.id } })}
+            accessibilityRole="button"
+            style={({ pressed }) => [styles.suggest, { borderColor: theme.border }, pressed && styles.pressed]}>
+            <ThemedText type="caption" themeColor="textSecondary">
+              Know another deal here?{' '}
+              <ThemedText type="captionStrong" style={styles.underline}>
+                Suggest it
+              </ThemedText>
+            </ThemedText>
+          </Pressable>
         </View>
       </ScrollView>
     </ThemedView>
@@ -160,4 +173,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   pressed: { opacity: 0.7 },
+  suggest: { paddingTop: Spacing.four, borderTopWidth: StyleSheet.hairlineWidth },
+  underline: { textDecorationLine: 'underline' },
 });

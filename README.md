@@ -61,6 +61,9 @@ anonymous sign-ins* must be on). Later, Apple and Google sign-in will upgrade th
   admin "Verified …" date.
 - Reports go to the admins only and never change a listing automatically. To review them, run
   `supabase/admin/open_reports.sql` in the SQL Editor (it includes resolve and turn-off snippets).
+- **Suggest a bar or deal**: from the bottom of the home list ("Know a happy hour we're missing?")
+  or a venue page ("Know another deal here?"). Anyone can send one (up to 5 a day), and it stays
+  private until an admin adds it. Review them with `supabase/admin/suggestions.sql`.
 - Social features (sharing, friends, group crawls) will require a real account. Crawls stay private
   and invite-only.
 
