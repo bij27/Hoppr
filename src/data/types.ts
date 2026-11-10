@@ -11,7 +11,12 @@ export type Deal = DealSchedule & {
   category: DealCategory;
   /** ISO timestamp of the last time someone confirmed this deal in person. */
   lastVerifiedAt: string | null;
+  /** Optional price list (e.g. a happy hour menu). */
+  menu?: MenuSection[] | null;
 };
+
+export type MenuItem = { name: string; price: string };
+export type MenuSection = { section: string; items: MenuItem[] };
 
 export type Venue = {
   id: string;

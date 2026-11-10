@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { venueFromRow, type VenueRow } from '../rows';
+import { parseMenu, venueFromRow, type VenueRow } from '../rows';
 
 const row: VenueRow = {
   id: 'v1',
@@ -43,6 +43,7 @@ describe('venueFromRow', () => {
           startMin: 1380,
           endMin: 120,
           lastVerifiedAt: '2026-11-02T20:00:00Z',
+          menu: null,
         },
       ],
     });
@@ -50,5 +51,24 @@ describe('venueFromRow', () => {
 
   it('treats missing deals as none', () => {
     expect(venueFromRow({ ...row, deals: null }).deals).toEqual([]);
+  });
+});
+
+describe('parseMenu', () => {
+  it('keeps well-formed sections and items', () => {
+    const menu = [{ section: 'Beer', items: [{ name: 'Draft, 14 oz', price: '$6' }] }];
+    expect(parseMenu(menu)).toEqual(menu);
+  });
+
+  it('drops malformed items and empty sections instead of crashing', () => {
+    expect(
+      parseMenu([
+        { section: 'Beer', items: [{ name: 'Draft', price: 6 }, null, { name: 'Bottle', price: '$5' }] },
+        { section: 'Empty', items: [] },
+        'junk',
+      ]),
+    ).toEqual([{ section: 'Beer', items: [{ name: 'Bottle', price: '$5' }] }]);
+    expect(parseMenu(null)).toBeNull();
+    expect(parseMenu({})).toBeNull();
   });
 });

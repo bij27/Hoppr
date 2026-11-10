@@ -3,6 +3,7 @@ import { Fragment, useState } from 'react';
 import { Linking, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { Button } from '@/components/button';
+import { DealMenu } from '@/components/deal-menu';
 import { StatusBadge } from '@/components/status-badge';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -104,6 +105,7 @@ export default function VenueScreen() {
                           {d.details}
                         </ThemedText>
                       )}
+                      {d.menu && <DealMenu menu={d.menu} />}
                       <StatusBadge status={dealStatus([d], now)} now={now} />
                       <ThemedText type="caption" themeColor="textTertiary">
                         {formatVerified(d.lastVerifiedAt, now)}
