@@ -1,4 +1,4 @@
-import { MARKET_TZ } from './time';
+import { addDays, type LocalDate, localDate, MARKET_TZ } from './time';
 
 const DAY_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -68,4 +68,27 @@ export function formatVerified(iso: string | null, now: Date): string {
   if (days < 30) return `Verified ${days} days ago`;
   const months = Math.floor(days / 30);
   return `Verified ${months} month${months === 1 ? '' : 's'} ago`;
+}
+
+/** A calendar date as Postgres/ISO "YYYY-MM-DD". */
+export function isoDate(d: Pick<LocalDate, 'year' | 'month' | 'day'>): string {
+  return `${d.year}-${String(d.month).padStart(2, '0')}-${String(d.day).padStart(2, '0')}`;
+}
+
+/** "today at 5:12 PM", "yesterday at 9 PM", "Mon at 6:30 PM" (market time, within a week). */
+export function formatRecent(iso: string, now: Date, tz: string = MARKET_TZ): string {
+  const at = new Date(iso);
+  const day = isoDate(localDate(at, tz));
+  const today = localDate(now, tz);
+  const clock = formatClock(at, tz);
+  if (day === isoDate(today)) return `today at ${clock}`;
+  if (day === isoDate(addDays(today, -1))) return `yesterday at ${clock}`;
+  return `${DAY_SHORT[localDate(at, tz).weekday]} at ${clock}`;
+}
+
+/** "Confirmed by 4 people this week · last today at 5:12 PM", or null when nobody has. */
+export function formatConfirmations(count: number, lastIso: string | null, now: Date, tz: string = MARKET_TZ): string | null {
+  if (count <= 0) return null;
+  const who = count === 1 ? '1 person' : `${count} people`;
+  return lastIso ? `Confirmed by ${who} this week · last ${formatRecent(lastIso, now, tz)}` : `Confirmed by ${who} this week`;
 }

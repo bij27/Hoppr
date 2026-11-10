@@ -49,6 +49,21 @@ the **fictional sample bars** in `src/data/fixtures.ts`. Production builds never
 Schema changes live in `supabase/migrations/`. Each new file must be run once against the
 database, in filename order (currently by pasting it into the Supabase SQL Editor).
 
+## Community feedback
+
+Each deal has **Still on? → ✓ Yes** (offered only while the deal is live) and **Something's off?**
+(choose a reason, add an optional note). People don't need an account: the first time they tap one,
+the app signs them in anonymously with Supabase (Authentication → Sign In / Providers → *Allow
+anonymous sign-ins* must be on). Later, Apple and Google sign-in will upgrade that same account.
+
+- Each person can confirm and report a deal once per day (enforced in the database).
+- Deals show "Confirmed by N people this week" when anyone has confirmed them, and otherwise the
+  admin "Verified …" date.
+- Reports go to the admins only and never change a listing automatically. To review them, run
+  `supabase/admin/open_reports.sql` in the SQL Editor (it includes resolve and turn-off snippets).
+- Social features (sharing, friends, group crawls) will require a real account. Crawls stay private
+  and invite-only.
+
 ## Maps
 
 - iOS uses Apple Maps and needs no key. Android uses Google Maps: it works in Expo Go, but store

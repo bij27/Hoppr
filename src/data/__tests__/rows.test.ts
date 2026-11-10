@@ -44,6 +44,8 @@ describe('venueFromRow', () => {
           endMin: 120,
           lastVerifiedAt: '2026-11-02T20:00:00Z',
           menu: null,
+          confirmCount7d: 0,
+          lastConfirmedAt: null,
         },
       ],
     });

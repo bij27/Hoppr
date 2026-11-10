@@ -3,6 +3,7 @@ import { Fragment, useState } from 'react';
 import { Linking, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { Button } from '@/components/button';
+import { DealFeedback } from '@/components/deal-feedback';
 import { DealMenu } from '@/components/deal-menu';
 import { StatusBadge } from '@/components/status-badge';
 import { ThemedText } from '@/components/themed-text';
@@ -11,7 +12,7 @@ import { MaxContentWidth, Radius, Spacing } from '@/constants/theme';
 import { useNow } from '@/hooks/use-now';
 import { useTheme } from '@/hooks/use-theme';
 import { dealStatus } from '@/lib/deals';
-import { formatDays, formatVerified, formatWindow } from '@/lib/format';
+import { formatDays, formatWindow } from '@/lib/format';
 import { useCrawl } from '@/state/crawl';
 import { useVenues } from '@/state/venues';
 
@@ -87,6 +88,7 @@ export default function VenueScreen() {
           <View>
             {venue.deals.map((d, i) => {
               const picked = pickedDealIds?.includes(d.id) ?? false;
+              const status = dealStatus([d], now);
               return (
                 <Fragment key={d.id}>
                   {i > 0 && <View style={[styles.divider, { backgroundColor: theme.border }]} />}
@@ -106,10 +108,8 @@ export default function VenueScreen() {
                         </ThemedText>
                       )}
                       {d.menu && <DealMenu menu={d.menu} />}
-                      <StatusBadge status={dealStatus([d], now)} now={now} />
-                      <ThemedText type="caption" themeColor="textTertiary">
-                        {formatVerified(d.lastVerifiedAt, now)}
-                      </ThemedText>
+                      <StatusBadge status={status} now={now} />
+                      <DealFeedback deal={d} live={status.kind === 'active'} now={now} />
                     </View>
                     <Pressable
                       onPress={() => onToggleDeal(d.id)}

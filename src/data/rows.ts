@@ -22,6 +22,8 @@ export type DealRow = {
   end_minute: number;
   last_verified_at: string | null;
   menu?: unknown;
+  confirm_count_7d?: number;
+  last_confirmed_at?: string | null;
 };
 
 export function venueFromRow(row: VenueRow): Venue {
@@ -47,6 +49,8 @@ function dealFromRow(row: DealRow, venueId: string): Deal {
     endMin: row.end_minute,
     lastVerifiedAt: row.last_verified_at,
     menu: parseMenu(row.menu),
+    confirmCount7d: typeof row.confirm_count_7d === 'number' ? row.confirm_count_7d : 0,
+    lastConfirmedAt: row.last_confirmed_at ?? null,
   };
 }
 

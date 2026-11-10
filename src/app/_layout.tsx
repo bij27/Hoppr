@@ -7,6 +7,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { CrawlProvider } from '@/state/crawl';
+import { FeedbackProvider } from '@/state/feedback';
 import { VenuesProvider } from '@/state/venues';
 
 SplashScreen.preventAutoHideAsync();
@@ -29,17 +30,19 @@ export default function RootLayout() {
       <ThemeProvider value={navTheme}>
         <VenuesProvider>
           <CrawlProvider>
-            <Stack
-              screenOptions={{
-                headerShadowVisible: false,
-                headerBackButtonDisplayMode: 'minimal',
-                headerTintColor: c.text,
-                headerStyle: { backgroundColor: c.background },
-              }}>
-              <Stack.Screen name="index" options={{ headerShown: false, title: 'Hoppr' }} />
-              <Stack.Screen name="venue/[id]" options={{ title: '' }} />
-              <Stack.Screen name="crawl" options={{ title: '' }} />
-            </Stack>
+            <FeedbackProvider>
+              <Stack
+                screenOptions={{
+                  headerShadowVisible: false,
+                  headerBackButtonDisplayMode: 'minimal',
+                  headerTintColor: c.text,
+                  headerStyle: { backgroundColor: c.background },
+                }}>
+                <Stack.Screen name="index" options={{ headerShown: false, title: 'Hoppr' }} />
+                <Stack.Screen name="venue/[id]" options={{ title: '' }} />
+                <Stack.Screen name="crawl" options={{ title: '' }} />
+              </Stack>
+            </FeedbackProvider>
           </CrawlProvider>
         </VenuesProvider>
       </ThemeProvider>
