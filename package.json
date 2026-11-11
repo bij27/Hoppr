@@ -48,7 +48,8 @@
     "web": "expo start --web",
     "lint": "expo lint",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "import-sheet": "node scripts/import-sheet/index.mjs"
   },
   "private": true
 }
