@@ -45,7 +45,7 @@ export default function FiltersScreen() {
           {section(
             'EVENTS & NIGHTS',
             'Works with Live now: Karaoke + Live now = karaoke on right now.',
-            TAGS.filter((t) => t.group === 'events').map((t) => (
+            TAGS.filter((t) => t.section === 'events').map((t) => (
               <Pill
                 key={t.slug}
                 label={t.label}
@@ -56,20 +56,30 @@ export default function FiltersScreen() {
           )}
           {section(
             'DEALS',
-            'Happy hours with food or drink specials.',
-            DEAL_TYPES.map((t) => (
-              <Pill
-                key={t.value}
-                label={t.label}
-                selected={filters.types.includes(t.value)}
-                onPress={() => filters.toggleType(t.value)}
-              />
-            )),
+            'Happy hours with food or drink specials, and brunch.',
+            [
+              ...DEAL_TYPES.map((t) => (
+                <Pill
+                  key={t.value}
+                  label={t.label}
+                  selected={filters.types.includes(t.value)}
+                  onPress={() => filters.toggleType(t.value)}
+                />
+              )),
+              ...TAGS.filter((t) => t.section === 'deals').map((t) => (
+                <Pill
+                  key={t.slug}
+                  label={t.label}
+                  selected={filters.tags.includes(t.slug)}
+                  onPress={() => filters.toggleTag(t.slug)}
+                />
+              )),
+            ],
           )}
           {section(
             'THE BAR HAS',
             'Pick several to see bars with any of them.',
-            TAGS.filter((t) => t.group === 'features').map((t) => (
+            TAGS.filter((t) => t.section === 'features').map((t) => (
               <Pill
                 key={t.slug}
                 label={t.label}

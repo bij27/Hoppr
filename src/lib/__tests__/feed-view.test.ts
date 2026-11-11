@@ -89,4 +89,13 @@ describe('viewVenue', () => {
     expect(viewVenue(bar, MON_930PM, q('all', ['live-music', 'patio']))).not.toBeNull();
     expect(viewVenue(bar, MON_930PM, q('all', ['live-music', 'pool']))).toBeNull();
   });
+
+  it('filters brunch specials, and combines with deal types (brunch drink deals)', () => {
+    const brunch = listing('brunch', { tags: ['brunch'], days: [0, 6], startMin: 11 * 60, endMin: 15 * 60 });
+    const bar = venue([lateDeal, brunch]);
+    expect(viewVenue(bar, MON_930PM, q('all', ['brunch']))?.headline?.id).toBe('brunch');
+    expect(viewVenue(bar, MON_930PM, q('all', ['brunch'], ['drinks']))).not.toBeNull();
+    expect(viewVenue(bar, MON_930PM, q('all', ['brunch'], ['food']))).toBeNull();
+    expect(viewVenue(venue([lateDeal]), MON_930PM, q('all', ['brunch']))).toBeNull();
+  });
 });

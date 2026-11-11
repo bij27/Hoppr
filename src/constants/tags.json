@@ -1,5 +1,5 @@
 {
-  "_comment": "The one list of tags. Used by the app (filters, badges) and scripts/import-sheet (validation). Add new tags here; slugs never change once used. group: events = things on a schedule, tagged on deals/events; features = always true about the bar, tagged on bars. aliases: other ways people may write it in the sheet.",
+  "_comment": "The one list of tags. Used by the app (filters, badges) and scripts/import-sheet (validation). Add new tags here; slugs never change once used. group: events = things on a schedule, tagged on deals/events; features = always true about the bar, tagged on bars. aliases: other ways people may write it in the sheet. section (optional): which filter-panel section shows it, if not the group's own (brunch is a listing tag shown under Deals).",
   "tags": [
     { "slug": "karaoke", "label": "Karaoke", "group": "events", "aliases": [] },
     { "slug": "live-music", "label": "Live music", "group": "events", "aliases": ["music", "live band", "band"] },
@@ -9,6 +9,7 @@
     { "slug": "comedy", "label": "Comedy", "group": "events", "aliases": ["stand-up", "standup", "comedy night"] },
     { "slug": "ladies-night", "label": "Ladies night", "group": "events", "aliases": ["ladies"] },
     { "slug": "industry-night", "label": "Industry night", "group": "events", "aliases": ["industry", "sin", "service industry"] },
+    { "slug": "brunch", "label": "Brunch", "group": "events", "section": "deals", "aliases": ["bottomless", "bottomless mimosas", "mimosas", "weekend brunch"] },
 
     { "slug": "pool", "label": "Pool tables", "group": "features", "aliases": ["pool table", "pool tables", "billiards"] },
     { "slug": "darts", "label": "Darts", "group": "features", "aliases": ["dart"] },

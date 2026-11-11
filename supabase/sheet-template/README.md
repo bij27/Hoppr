@@ -58,7 +58,7 @@ Tags come from one list shared with the app (`src/constants/tags.json`); ask Cla
 Capitals don't matter, and common alternatives work ("pool table", "outdoor", "live band").
 
 - **Bars tab (features):** pool, darts, patio, sports on TV, waterfront, rooftop, dog-friendly, games
-- **Deals tab (events & nights):** karaoke, live music, trivia, DJ, drag show, comedy, ladies night, industry night
+- **Deals tab (events & nights):** karaoke, live music, trivia, DJ, drag show, comedy, ladies night, industry night, brunch (also "bottomless", "mimosas")
 
 ## Menus tab: optional price lists
 For a deal with a long price list (like Kubo's happy hour). One row per item. The app shows these

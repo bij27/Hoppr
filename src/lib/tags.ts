@@ -2,14 +2,16 @@
 import data from '../constants/tags.json';
 
 export type TagGroup = 'events' | 'features';
-export type Tag = { slug: string; label: string; group: TagGroup };
+/** Filter-panel section: night events, deal types, or bar features. */
+export type TagSection = 'events' | 'deals' | 'features';
+export type Tag = { slug: string; label: string; group: TagGroup; section: TagSection };
 
 /** All known tags, in display order. */
-export const TAGS: readonly Tag[] = data.tags.map(({ slug, label, group }) => ({
-  slug,
-  label,
-  group: group === 'features' ? 'features' : 'events',
-}));
+export const TAGS: readonly Tag[] = data.tags.map((t: { slug: string; label: string; group: string; section?: string }) => {
+  const group: TagGroup = t.group === 'features' ? 'features' : 'events';
+  const section: TagSection = t.section === 'deals' ? 'deals' : group;
+  return { slug: t.slug, label: t.label, group, section };
+});
 
 const BY_SLUG = new Map(TAGS.map((t) => [t.slug, t]));
 
