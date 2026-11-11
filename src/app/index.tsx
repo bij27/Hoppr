@@ -175,17 +175,28 @@ export default function HomeScreen() {
           )}
           ListFooterComponent={
             loading ? undefined : (
-              <Pressable
-                onPress={() => router.push('/suggest')}
-                accessibilityRole="button"
-                style={({ pressed }) => [styles.suggest, pressed && styles.pressed]}>
-                <ThemedText type="caption" themeColor="textSecondary" style={styles.center}>
-                  Know a happy hour we’re missing?{' '}
-                  <ThemedText type="captionStrong" style={styles.underline}>
-                    Suggest it
+              <View style={styles.footer}>
+                <Pressable
+                  onPress={() => router.push('/suggest')}
+                  accessibilityRole="button"
+                  style={({ pressed }) => pressed && styles.pressed}>
+                  <ThemedText type="caption" themeColor="textSecondary" style={styles.center}>
+                    Know a happy hour we’re missing?{' '}
+                    <ThemedText type="captionStrong" style={styles.underline}>
+                      Suggest it
+                    </ThemedText>
                   </ThemedText>
-                </ThemedText>
-              </Pressable>
+                </Pressable>
+                <Pressable
+                  onPress={() => router.push('/privacy')}
+                  accessibilityRole="link"
+                  hitSlop={8}
+                  style={({ pressed }) => pressed && styles.pressed}>
+                  <ThemedText type="caption" themeColor="textTertiary">
+                    Privacy
+                  </ThemedText>
+                </Pressable>
+              </View>
             )
           }
           ListEmptyComponent={
@@ -270,7 +281,7 @@ const styles = StyleSheet.create({
   list: { paddingHorizontal: Spacing.two, width: '100%', maxWidth: MaxContentWidth, alignSelf: 'center' },
   separator: { height: StyleSheet.hairlineWidth, marginHorizontal: Spacing.three },
   empty: { alignItems: 'center', gap: Spacing.three, paddingVertical: Spacing.five, paddingHorizontal: Spacing.four },
-  suggest: { paddingVertical: Spacing.four, paddingHorizontal: Spacing.four, alignItems: 'center' },
+  footer: { paddingVertical: Spacing.four, paddingHorizontal: Spacing.four, alignItems: 'center', gap: Spacing.three },
   underline: { textDecorationLine: 'underline' },
   pressed: { opacity: 0.6 },
   crawlBar: { position: 'absolute', left: Spacing.three, right: Spacing.three, alignItems: 'center' },

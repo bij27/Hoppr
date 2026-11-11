@@ -59,3 +59,23 @@ export function selectedDeals<D extends { id: string }>(stop: CrawlStop, deals: 
 export function isWholeVenue(stop: CrawlStop, deals: readonly { id: string }[]): boolean {
   return deals.every((d) => stop.dealIds.includes(d.id));
 }
+
+/** Reads stops saved as JSON, dropping anything malformed. Never throws. */
+export function parseStops(json: string | null | undefined): CrawlStop[] {
+  if (!json) return [];
+  try {
+    const value: unknown = JSON.parse(json);
+    if (!Array.isArray(value)) return [];
+    const stops: CrawlStop[] = [];
+    for (const s of value) {
+      if (typeof s !== 'object' || s === null) continue;
+      const { venueId, dealIds } = s as { venueId?: unknown; dealIds?: unknown };
+      if (typeof venueId !== 'string' || !Array.isArray(dealIds)) continue;
+      if (stops.some((x) => x.venueId === venueId)) continue;
+      stops.push({ venueId, dealIds: dealIds.filter((d): d is string => typeof d === 'string') });
+    }
+    return stops.slice(0, MAX_CRAWL_STOPS);
+  } catch {
+    return [];
+  }
+}

@@ -1,8 +1,15 @@
-import { createContext, type ReactNode, useCallback, useContext, useMemo, useState } from 'react';
+import { createContext, type ReactNode, useCallback, useContext, useMemo } from 'react';
+
+import { readStoredValue, useStoredValue, writeStoredValue } from '@/hooks/use-stored-value';
 
 import { MAX_CRAWL_STOPS } from '@/lib/crawl';
+import { useVenues } from '@/state/venues';
 
-import { type CrawlStop, removeVenue, toggleDeal, toggleVenue, type VenueRef } from './crawl-stops';
+import { type CrawlStop, parseStops, removeVenue, toggleDeal, toggleVenue, type VenueRef } from './crawl-stops';
+
+/** The crawl being planned is saved on the device, so it survives closing the app. */
+const STORAGE_KEY = 'hoppr.crawl.v1';
+
 
 type CrawlState = {
   stops: readonly CrawlStop[];
@@ -21,7 +28,30 @@ type CrawlState = {
 const CrawlContext = createContext<CrawlState | null>(null);
 
 export function CrawlProvider({ children }: { children: ReactNode }) {
-  const [stops, setStops] = useState<CrawlStop[]>([]);
+  const [saved] = useStoredValue(STORAGE_KEY);
+  const { byId, loading, error } = useVenues();
+  // Saved crawls can mention bars or deals that have since been removed: skip those once the
+  // venue list is in (keep everything while it's loading or failed to load).
+  const prune = useCallback(
+    (parsed: CrawlStop[]): CrawlStop[] => {
+      if (loading || error) return parsed;
+      return parsed.flatMap((s) => {
+        const venue = byId.get(s.venueId);
+        if (!venue) return [];
+        const dealIds = s.dealIds.filter((id) => venue.deals.some((d) => d.id === id));
+        return [{ venueId: s.venueId, dealIds: dealIds.length > 0 ? dealIds : venue.deals.map((d) => d.id) }];
+      });
+    },
+    [byId, loading, error],
+  );
+  const stops = useMemo(() => prune(parseStops(saved)), [prune, saved]);
+
+  /** Applies a change to the latest saved stops (never a stale copy) and saves the result. */
+  const setStops = useCallback(
+    (update: (prev: CrawlStop[]) => CrawlStop[]) =>
+      writeStoredValue(STORAGE_KEY, JSON.stringify(update(prune(parseStops(readStoredValue(STORAGE_KEY)))))),
+    [prune],
+  );
 
   const dealIdsFor = useCallback((id: string) => stops.find((s) => s.venueId === id)?.dealIds, [stops]);
   const has = useCallback((id: string) => stops.some((s) => s.venueId === id), [stops]);
@@ -34,7 +64,7 @@ export function CrawlProvider({ children }: { children: ReactNode }) {
       if (ok) setStops((prev) => toggleVenue(prev, venue).stops);
       return ok;
     },
-    [stops],
+    [stops, setStops],
   );
 
   const onToggleDeal = useCallback(
@@ -43,11 +73,11 @@ export function CrawlProvider({ children }: { children: ReactNode }) {
       if (ok) setStops((prev) => toggleDeal(prev, venue, dealId).stops);
       return ok;
     },
-    [stops],
+    [stops, setStops],
   );
 
-  const remove = useCallback((id: string) => setStops((prev) => removeVenue(prev, id)), []);
-  const clear = useCallback(() => setStops([]), []);
+  const remove = useCallback((id: string) => setStops((prev) => removeVenue(prev, id)), [setStops]);
+  const clear = useCallback(() => setStops(() => []), [setStops]);
 
   const value = useMemo<CrawlState>(
     () => ({

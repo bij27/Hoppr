@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { MAX_CRAWL_STOPS } from '../../lib/crawl';
-import { isWholeVenue, selectedDeals, toggleDeal, toggleVenue, type CrawlStop, type VenueRef } from '../crawl-stops';
+import { isWholeVenue, parseStops, selectedDeals, toggleDeal, toggleVenue, type CrawlStop, type VenueRef } from '../crawl-stops';
 
 const delMar: VenueRef = { id: 'v1', deals: [{ id: 'hh-food' }, { id: 'hh-drinks' }, { id: 'wine-wed' }] };
 const other: VenueRef = { id: 'v2', deals: [{ id: 'x' }] };
@@ -64,5 +64,27 @@ describe('selectedDeals / isWholeVenue', () => {
   it('falls back to all deals if the picked ones no longer exist', () => {
     const stop = { venueId: 'v1', dealIds: ['gone'] };
     expect(selectedDeals(stop, delMar.deals)).toHaveLength(3);
+  });
+});
+
+describe('parseStops', () => {
+  it('reads saved stops and drops malformed or duplicate entries', () => {
+    const saved = JSON.stringify([
+      { venueId: 'a', dealIds: ['d1', 7] },
+      { venueId: 'a', dealIds: [] },
+      { venueId: 3, dealIds: [] },
+      'junk',
+      { venueId: 'b', dealIds: [] },
+    ]);
+    expect(parseStops(saved)).toEqual([
+      { venueId: 'a', dealIds: ['d1'] },
+      { venueId: 'b', dealIds: [] },
+    ]);
+  });
+
+  it('returns no stops for missing or broken data', () => {
+    expect(parseStops(null)).toEqual([]);
+    expect(parseStops('{not json')).toEqual([]);
+    expect(parseStops('{}')).toEqual([]);
   });
 });

@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
+import { AgeGate } from '@/components/age-gate';
 import { LaunchScreen } from '@/components/launch-screen';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
@@ -43,7 +44,9 @@ export default function RootLayout() {
                 <Stack.Screen name="venue/[id]" options={{ title: '' }} />
                 <Stack.Screen name="crawl" options={{ title: '' }} />
                 <Stack.Screen name="suggest" options={{ title: '' }} />
+                <Stack.Screen name="privacy" options={{ title: '' }} />
               </Stack>
+              <AgeGate />
               <LaunchGate />
             </FeedbackProvider>
           </CrawlProvider>
