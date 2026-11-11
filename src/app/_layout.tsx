@@ -10,6 +10,7 @@ import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { CrawlProvider } from '@/state/crawl';
 import { FeedbackProvider } from '@/state/feedback';
+import { FiltersProvider } from '@/state/filters';
 import { useVenues, VenuesProvider } from '@/state/venues';
 
 SplashScreen.preventAutoHideAsync();
@@ -33,21 +34,24 @@ export default function RootLayout() {
         <VenuesProvider>
           <CrawlProvider>
             <FeedbackProvider>
-              <Stack
-                screenOptions={{
-                  headerShadowVisible: false,
-                  headerBackButtonDisplayMode: 'minimal',
-                  headerTintColor: c.text,
-                  headerStyle: { backgroundColor: c.background },
-                }}>
-                <Stack.Screen name="index" options={{ headerShown: false, title: 'Hoppr' }} />
-                <Stack.Screen name="venue/[id]" options={{ title: '' }} />
-                <Stack.Screen name="crawl" options={{ title: '' }} />
-                <Stack.Screen name="suggest" options={{ title: '' }} />
-                <Stack.Screen name="privacy" options={{ title: '' }} />
-              </Stack>
-              <AgeGate />
-              <LaunchGate />
+              <FiltersProvider>
+                <Stack
+                  screenOptions={{
+                    headerShadowVisible: false,
+                    headerBackButtonDisplayMode: 'minimal',
+                    headerTintColor: c.text,
+                    headerStyle: { backgroundColor: c.background },
+                  }}>
+                  <Stack.Screen name="index" options={{ headerShown: false, title: 'Hoppr' }} />
+                  <Stack.Screen name="venue/[id]" options={{ title: '' }} />
+                  <Stack.Screen name="crawl" options={{ title: '' }} />
+                  <Stack.Screen name="suggest" options={{ title: '' }} />
+                  <Stack.Screen name="privacy" options={{ title: '' }} />
+                  <Stack.Screen name="filters" options={{ title: '', presentation: 'modal' }} />
+                </Stack>
+                <AgeGate />
+                <LaunchGate />
+              </FiltersProvider>
             </FeedbackProvider>
           </CrawlProvider>
         </VenuesProvider>

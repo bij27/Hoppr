@@ -32,10 +32,13 @@ describe('venueFromRow', () => {
       neighborhood: 'Las Olas',
       address: '123 E Las Olas Blvd',
       location: { lat: 26.1191, lng: -80.1366 },
+      tags: [],
       deals: [
         {
           id: 'd1',
           venueId: 'v1',
+          kind: 'deal',
+          tags: [],
           title: '$5 margaritas',
           details: null,
           category: 'drinks',

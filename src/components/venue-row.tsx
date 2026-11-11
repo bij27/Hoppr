@@ -1,18 +1,20 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 
+import { EventBadge } from '@/components/event-badge';
 import { StatusBadge } from '@/components/status-badge';
 import { ThemedText } from '@/components/themed-text';
 import { Radius, Spacing } from '@/constants/theme';
 import type { Venue } from '@/data/types';
 import { useTheme } from '@/hooks/use-theme';
-import type { DealStatus } from '@/lib/deals';
+import type { VenueView } from '@/lib/feed';
+import { formatClock } from '@/lib/format';
+import { eventLabel } from '@/lib/tags';
 
 type VenueRowProps = {
   venue: Venue;
-  status: DealStatus;
+  /** How this bar appears right now (status, event badges, featured listing). */
+  view: VenueView;
   now: Date;
-  /** The one deal to feature (usually the live or next one). */
-  headline: string | null;
   distance: string | null;
   selected: boolean;
   /** Deals picked for the crawl at this venue; undefined if not in the crawl. */
@@ -28,9 +30,8 @@ type VenueRowProps = {
  */
 export function VenueRow({
   venue,
-  status,
+  view,
   now,
-  headline,
   distance,
   selected,
   pickedDealIds,
@@ -52,18 +53,25 @@ export function VenueRow({
           <ThemedText type="bodyStrong" numberOfLines={1} style={styles.name}>
             {venue.name}
           </ThemedText>
+          <EventBadge events={view.liveEvents} />
+          <View style={styles.flex} />
           {distance && (
             <ThemedText type="caption" themeColor="textSecondary">
               {distance}
             </ThemedText>
           )}
         </View>
-        {headline && (
+        {view.headline && (
           <ThemedText type="caption" themeColor="textSecondary" numberOfLines={1}>
-            {headline}
+            {view.headline.title}
           </ThemedText>
         )}
-        <StatusBadge status={status} now={now} />
+        {view.showStatus && <StatusBadge status={view.status} now={now} />}
+        {view.nextEvent && (
+          <ThemedText type="caption" themeColor="textSecondary" numberOfLines={1}>
+            {eventLabel(view.nextEvent.deal)} at {formatClock(new Date(now.getTime() + view.nextEvent.startsInMin * 60_000))}
+          </ThemedText>
+        )}
       </Pressable>
 
       <Pressable
@@ -96,8 +104,9 @@ const styles = StyleSheet.create({
     borderRadius: Radius.medium,
   },
   body: { flex: 1, gap: Spacing.one },
-  titleLine: { flexDirection: 'row', alignItems: 'baseline', gap: Spacing.two },
+  titleLine: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
   name: { flexShrink: 1 },
+  flex: { flex: 1 },
   add: {
     minWidth: 52,
     height: 34,

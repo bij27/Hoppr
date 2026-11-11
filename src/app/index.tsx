@@ -1,10 +1,11 @@
 import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { FlatList, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { FlatList, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BottomSheet } from '@/components/bottom-sheet';
 import { Button } from '@/components/button';
+import { EventBadge } from '@/components/event-badge';
 import { FrogLoader } from '@/components/frog-loader';
 import { VenueMap } from '@/components/map/venue-map';
 import type { MapPin } from '@/components/map/types';
@@ -18,11 +19,12 @@ import type { Venue } from '@/data/types';
 import { useNow } from '@/hooks/use-now';
 import { useTheme } from '@/hooks/use-theme';
 import { useUserLocation } from '@/hooks/use-user-location';
-import { dealStatus } from '@/lib/deals';
-import { featuredDeal, type FeedFilter, matchesFilter, pinTone, rankStatus } from '@/lib/feed';
+import { type FeedFilter, viewVenue } from '@/lib/feed';
 import { formatClock } from '@/lib/format';
 import { distanceMeters, formatDistance } from '@/lib/geo';
+import { tagLabel } from '@/lib/tags';
 import { useCrawl } from '@/state/crawl';
+import { useFilters } from '@/state/filters';
 import { useVenues } from '@/state/venues';
 
 const FILTERS = [
@@ -37,7 +39,7 @@ const SHEET_TITLES: Record<FeedFilter, string> = {
   all: 'All bars',
 };
 
-const PEEK_HEIGHT = 228;
+const PEEK_HEIGHT = 268;
 const CRAWL_BAR_SPACE = 92;
 
 export default function HomeScreen() {
@@ -49,6 +51,7 @@ export default function HomeScreen() {
   const { venues, loading, error, reload } = useVenues();
   const crawl = useCrawl();
   const { location, granted } = useUserLocation();
+  const filters = useFilters();
 
   const [filter, setFilter] = useState<FeedFilter>('now');
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -57,23 +60,23 @@ export default function HomeScreen() {
 
   const snapPoints = [PEEK_HEIGHT + insets.bottom, Math.round(windowHeight * 0.5), windowHeight - insets.top - 64];
 
-  const rows = useMemo(
-    () =>
-      venues
-        .map((venue) => ({ venue, status: dealStatus(venue.deals, now) }))
-        .filter((r) => matchesFilter(r.status, filter))
-        .sort((a, b) => rankStatus(a.status) - rankStatus(b.status) || a.venue.name.localeCompare(b.venue.name)),
-    [venues, now, filter],
-  );
+  const rows = useMemo(() => {
+    const query = { time: filter, tags: filters.tags, types: filters.types };
+    return venues
+      .flatMap((venue) => {
+        const view = viewVenue(venue, now, query);
+        return view ? [{ venue, view }] : [];
+      })
+      .sort((a, b) => a.view.rank - b.view.rank || a.venue.name.localeCompare(b.venue.name));
+  }, [venues, now, filter, filters.tags, filters.types]);
 
   const pins = useMemo<MapPin[]>(
-    () => rows.map(({ venue, status }) => ({ id: venue.id, location: venue.location, tone: pinTone(status), label: venue.name })),
+    () => rows.map(({ venue, view }) => ({ id: venue.id, location: venue.location, tone: view.tone, label: venue.name })),
     [rows],
   );
 
   const selected = rows.find((r) => r.venue.id === selectedId) ?? null;
   const distanceTo = (v: Venue) => (location ? formatDistance(distanceMeters(location, v.location)) : null);
-  const headlineFor = (v: Venue) => featuredDeal(v.deals, now)?.title ?? null;
 
   const toggleCrawl = (venue: Venue) => {
     setNotice(crawl.toggleVenue(venue) ? null : 'Your crawl is full. Remove a stop to add another.');
@@ -88,21 +91,24 @@ export default function HomeScreen() {
     <View style={styles.sheetHeader}>
       <View style={styles.selectedTop}>
         <View style={styles.flex}>
-          <ThemedText type="heading" numberOfLines={1}>
-            {selected.venue.name}
-          </ThemedText>
+          <View style={styles.nameLine}>
+            <ThemedText type="heading" numberOfLines={1} style={styles.shrink}>
+              {selected.venue.name}
+            </ThemedText>
+            <EventBadge events={selected.view.liveEvents} />
+          </View>
           <ThemedText type="caption" themeColor="textSecondary" numberOfLines={1}>
             {[selected.venue.neighborhood, distanceTo(selected.venue)].filter(Boolean).join(' · ')}
           </ThemedText>
         </View>
         <Button label="Close" variant="quiet" size="small" onPress={() => setSelectedId(null)} />
       </View>
-      {headlineFor(selected.venue) && (
+      {selected.view.headline && (
         <ThemedText type="body" numberOfLines={1}>
-          {headlineFor(selected.venue)}
+          {selected.view.headline.title}
         </ThemedText>
       )}
-      <StatusBadge status={selected.status} now={now} />
+      {selected.view.showStatus && <StatusBadge status={selected.view.status} now={now} />}
       <View style={styles.selectedActions}>
         <Button label="View deals" style={styles.flex} onPress={() => openVenue(selected.venue.id)} />
         <Button
@@ -124,6 +130,43 @@ export default function HomeScreen() {
         )}
       </View>
       <Segmented options={FILTERS} value={filter} onChange={setFilter} />
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
+        <Pressable
+          onPress={() => router.push('/filters')}
+          accessibilityRole="button"
+          accessibilityLabel={filters.count > 0 ? `Filters, ${filters.count} on` : 'Filters'}
+          style={({ pressed }) => [
+            styles.chip,
+            filters.count > 0
+              ? { backgroundColor: theme.primary, borderColor: theme.primary }
+              : { borderColor: theme.border },
+            pressed && styles.pressed,
+          ]}>
+          <ThemedText type="captionStrong" style={{ color: filters.count > 0 ? theme.onPrimary : theme.text }}>
+            {filters.count > 0 ? `Filters · ${filters.count}` : 'Filters'}
+          </ThemedText>
+        </Pressable>
+        {filters.types.map((t) => (
+          <Pressable
+            key={t}
+            onPress={() => filters.toggleType(t)}
+            accessibilityRole="button"
+            accessibilityLabel={`Remove filter ${t === 'food' ? 'Food deals' : 'Drink deals'}`}
+            style={({ pressed }) => [styles.chip, { borderColor: theme.border }, pressed && styles.pressed]}>
+            <ThemedText type="caption">{t === 'food' ? 'Food deals' : 'Drink deals'} ✕</ThemedText>
+          </Pressable>
+        ))}
+        {filters.tags.map((slug) => (
+          <Pressable
+            key={slug}
+            onPress={() => filters.toggleTag(slug)}
+            accessibilityRole="button"
+            accessibilityLabel={`Remove filter ${tagLabel(slug) ?? slug}`}
+            style={({ pressed }) => [styles.chip, { borderColor: theme.border }, pressed && styles.pressed]}>
+            <ThemedText type="caption">{tagLabel(slug) ?? slug} ✕</ThemedText>
+          </Pressable>
+        ))}
+      </ScrollView>
       {notice && (
         <ThemedText type="caption" style={{ color: theme.warning }}>
           {notice}
@@ -163,9 +206,8 @@ export default function HomeScreen() {
           renderItem={({ item }) => (
             <VenueRow
               venue={item.venue}
-              status={item.status}
+              view={item.view}
               now={now}
-              headline={headlineFor(item.venue)}
               distance={distanceTo(item.venue)}
               selected={item.venue.id === selectedId}
               pickedDealIds={crawl.dealIdsFor(item.venue.id)}
@@ -210,6 +252,18 @@ export default function HomeScreen() {
                   Couldn’t load deals. {error}
                 </ThemedText>
                 <Button label="Try again" variant="secondary" size="small" onPress={reload} />
+              </View>
+            ) : filters.count > 0 ? (
+              <View style={styles.empty}>
+                <ThemedText themeColor="textSecondary" style={styles.center}>
+                  {filter === 'all' ? 'No bars match these filters yet.' : 'No matches for these filters right now.'}
+                </ThemedText>
+                <View style={styles.selectedActions}>
+                  {filter !== 'all' && (
+                    <Button label="See all times" variant="secondary" size="small" onPress={() => setFilter('all')} />
+                  )}
+                  <Button label="Clear filters" variant="secondary" size="small" onPress={filters.clear} />
+                </View>
               </View>
             ) : (
               <View style={styles.empty}>
@@ -257,6 +311,16 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   flex: { flex: 1 },
+  shrink: { flexShrink: 1 },
+  nameLine: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
+  chips: { gap: Spacing.two, alignItems: 'center' },
+  chip: {
+    minHeight: 32,
+    justifyContent: 'center',
+    paddingHorizontal: Spacing.three,
+    borderRadius: Radius.pill,
+    borderWidth: 1.5,
+  },
   center: { textAlign: 'center' },
   topBar: { position: 'absolute', left: Spacing.three, right: Spacing.three, flexDirection: 'row' },
   brandPill: {

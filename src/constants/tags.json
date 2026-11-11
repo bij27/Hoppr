@@ -1,0 +1,22 @@
+{
+  "_comment": "The one list of tags. Used by the app (filters, badges) and scripts/import-sheet (validation). Add new tags here; slugs never change once used. group: events = things on a schedule, tagged on deals/events; features = always true about the bar, tagged on bars. aliases: other ways people may write it in the sheet.",
+  "tags": [
+    { "slug": "karaoke", "label": "Karaoke", "group": "events", "aliases": [] },
+    { "slug": "live-music", "label": "Live music", "group": "events", "aliases": ["music", "live band", "band"] },
+    { "slug": "trivia", "label": "Trivia", "group": "events", "aliases": ["quiz"] },
+    { "slug": "dj", "label": "DJ", "group": "events", "aliases": ["djs"] },
+    { "slug": "drag", "label": "Drag show", "group": "events", "aliases": ["drag show", "drag brunch"] },
+    { "slug": "comedy", "label": "Comedy", "group": "events", "aliases": ["stand-up", "standup", "comedy night"] },
+    { "slug": "ladies-night", "label": "Ladies night", "group": "events", "aliases": ["ladies"] },
+    { "slug": "industry-night", "label": "Industry night", "group": "events", "aliases": ["industry", "sin", "service industry"] },
+
+    { "slug": "pool", "label": "Pool tables", "group": "features", "aliases": ["pool table", "pool tables", "billiards"] },
+    { "slug": "darts", "label": "Darts", "group": "features", "aliases": ["dart"] },
+    { "slug": "patio", "label": "Patio", "group": "features", "aliases": ["outdoor", "outdoor seating", "outside"] },
+    { "slug": "sports", "label": "Sports on TV", "group": "features", "aliases": ["sports bar", "tvs", "tv", "sports on tv"] },
+    { "slug": "waterfront", "label": "Waterfront", "group": "features", "aliases": ["water view", "on the water"] },
+    { "slug": "rooftop", "label": "Rooftop", "group": "features", "aliases": ["roof"] },
+    { "slug": "dog-friendly", "label": "Dog-friendly", "group": "features", "aliases": ["dogs", "dog friendly", "pet friendly"] },
+    { "slug": "games", "label": "Games", "group": "features", "aliases": ["cornhole", "beer pong", "arcade", "board games"] }
+  ]
+}

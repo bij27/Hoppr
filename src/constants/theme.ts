@@ -62,7 +62,8 @@ export const Colors = {
 
 export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;
 
-export type DealTone = 'live' | 'soon' | 'idle';
+/** live/soon/idle = deal status. event = only an event is on (ink, so green always means a deal). */
+export type DealTone = 'live' | 'soon' | 'idle' | 'event';
 
 /** Fill (pins, dots) and text color for a deal status. */
 export function toneColors(
@@ -76,6 +77,8 @@ export function toneColors(
       return { fill: c.soon, text: c.soonText };
     case 'idle':
       return { fill: c.idle, text: c.idleText };
+    case 'event':
+      return { fill: c.text, text: c.text };
   }
 }
 

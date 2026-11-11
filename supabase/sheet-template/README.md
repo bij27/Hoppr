@@ -22,6 +22,7 @@ importing it again just re-confirms Del Mar.
 | phone | Optional | (954) 533-9017 |
 | website | Optional | https://… |
 | publish | `yes` (or blank) shows it in the app; `no` keeps it hidden as a draft | yes |
+| tags | What the bar always has, comma-separated (see the tag list below) | pool, darts, patio |
 | notes | For you two only; never imported | Ask for manager Tues |
 
 ## Deals tab: one row per deal
@@ -30,15 +31,34 @@ importing it again just re-confirms Del Mar.
 | bar | Exactly the name from the Bars tab | Kubo Asian Fusion & Bar |
 | deal | Short headline people scan, with the best prices first. Each deal at a bar needs a different name. | $5 drafts, $7 wells |
 | details | Fine print: where it applies, exclusions | Bar only. Excludes premium. |
-| type | `drinks`, `food` or `both` (blank = drinks) | both |
+| type | `drinks`, `food` or `both` for a deal (blank = drinks); `event` for something on with no discount, like live music | both |
 | days | `Daily`, `Weekdays`, `Weekends`, `Mon-Fri`, `Fri-Sun`, `Tue, Thu`… | Mon-Fri |
 | start | When it starts | 4 PM |
 | end | When it ends. Use `midnight` for 12 AM. Late-night deals can end after midnight, like `2 AM`. | 7 PM |
+| tags | What kind of night it is, comma-separated (see the tag list below) | ladies night |
 | notes | For you two only; never imported | |
 
 "Until close" isn't a time; write the actual closing time for that day. If closing differs by day,
 make one row per set of days (e.g. `Sun-Thu … midnight` and `Fri-Sat … 2 AM`) with slightly
 different names.
+
+### Events
+Karaoke, live music, trivia and so on go on the Deals tab too, with **type** `event`, and they
+use the same days, start and end. While an event is on, the app shows a badge next to the bar's
+name ("Live music now") even if there's no deal. If an event *also* has a special (e.g. ladies
+night with free wine), make it a normal deal with the tag instead.
+
+| bar | deal | type | days | start | end | tags |
+|---|---|---|---|---|---|---|
+| The Wharf | Live music on the patio | event | Fri-Sat | 7 PM | 10 PM | live music |
+| Kubo Asian Fusion & Bar | Ladies Night: free glass of wine or margarita | drinks | Thu | 4 PM | midnight | ladies night |
+
+### Tag list
+Tags come from one list shared with the app (`src/constants/tags.json`); ask Claude to add new ones.
+Capitals don't matter, and common alternatives work ("pool table", "outdoor", "live band").
+
+- **Bars tab (features):** pool, darts, patio, sports on TV, waterfront, rooftop, dog-friendly, games
+- **Deals tab (events & nights):** karaoke, live music, trivia, DJ, drag show, comedy, ladies night, industry night
 
 ## Menus tab: optional price lists
 For a deal with a long price list (like Kubo's happy hour). One row per item. The app shows these

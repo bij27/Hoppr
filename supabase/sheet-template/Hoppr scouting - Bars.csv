@@ -1,2 +1,2 @@
-name,neighborhood,address,coordinates,phone,website,publish,notes
-Del Mar,Fort Lauderdale Beach,"2200 N Ocean Blvd, Fort Lauderdale, FL 33305","26.1585813637066, -80.1007987456949",(754) 778-7188,https://delmarmediterranean.com/locations-menus/fort-lauderdale/,yes,Example row - we work here
+name,neighborhood,address,coordinates,phone,website,publish,tags,notes
+Del Mar,Fort Lauderdale Beach,"2200 N Ocean Blvd, Fort Lauderdale, FL 33305","26.1585813637066, -80.1007987456949",(754) 778-7188,https://delmarmediterranean.com/locations-menus/fort-lauderdale/,yes,,Example row - we work here

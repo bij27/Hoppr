@@ -1,7 +1,8 @@
+import type { PinTone } from '@/lib/feed';
 import type { LatLng } from '@/lib/geo';
 
-/** live: a deal is on now. soon: one starts within a few hours. idle: nothing soon. */
-export type PinTone = 'live' | 'soon' | 'idle';
+/** live: a deal is on now. soon: one starts within a few hours. idle: nothing soon. event: only an event is on. */
+export type { PinTone };
 
 export type MapPin = {
   id: string;

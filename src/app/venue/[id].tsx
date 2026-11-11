@@ -1,10 +1,13 @@
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { Fragment, useState } from 'react';
+
+import type { Deal } from '@/data/types';
 import { Linking, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { Button } from '@/components/button';
 import { DealFeedback } from '@/components/deal-feedback';
 import { DealMenu } from '@/components/deal-menu';
+import { EventBadge } from '@/components/event-badge';
 import { FrogLoader } from '@/components/frog-loader';
 import { StatusBadge } from '@/components/status-badge';
 import { ThemedText } from '@/components/themed-text';
@@ -13,7 +16,9 @@ import { MaxContentWidth, Radius, Spacing } from '@/constants/theme';
 import { useNow } from '@/hooks/use-now';
 import { useTheme } from '@/hooks/use-theme';
 import { dealStatus } from '@/lib/deals';
+import { isEvent } from '@/lib/feed';
 import { formatDays, formatWindow } from '@/lib/format';
+import { tagLabel } from '@/lib/tags';
 import { useCrawl } from '@/state/crawl';
 import { useVenues } from '@/state/venues';
 
@@ -49,6 +54,61 @@ export default function VenueScreen() {
     );
   };
 
+  const deals = venue.deals.filter((d) => !isEvent(d));
+  const events = venue.deals.filter(isEvent);
+  const liveEvents = events.filter((e) => dealStatus([e], now).kind === 'active');
+  const features = (venue.tags ?? []).flatMap((t) => tagLabel(t) ?? []);
+
+  const renderListing = (d: Deal, i: number) => {
+    const picked = pickedDealIds?.includes(d.id) ?? false;
+    const status = dealStatus([d], now);
+    const labels = [
+      ...(isEvent(d) ? [] : [CATEGORY_LABEL[d.category]]),
+      ...(d.tags ?? []).flatMap((t) => tagLabel(t) ?? []),
+    ];
+    return (
+      <Fragment key={d.id}>
+        {i > 0 && <View style={[styles.divider, { backgroundColor: theme.border }]} />}
+        <View style={styles.deal}>
+          <View style={styles.dealBody}>
+            <ThemedText type="bodyStrong">{d.title}</ThemedText>
+            <ThemedText type="caption">
+              {formatDays(d.days)} · {formatWindow(d.startMin, d.endMin)}
+              {labels.length > 0 && (
+                <ThemedText type="caption" themeColor="textTertiary">
+                  {'  ·  '}
+                  {labels.join(' · ')}
+                </ThemedText>
+              )}
+            </ThemedText>
+            {d.details && (
+              <ThemedText type="caption" themeColor="textSecondary">
+                {d.details}
+              </ThemedText>
+            )}
+            {d.menu && <DealMenu menu={d.menu} />}
+            <StatusBadge status={status} now={now} />
+            <DealFeedback deal={d} live={status.kind === 'active'} now={now} />
+          </View>
+          <Pressable
+            onPress={() => onToggleDeal(d.id)}
+            hitSlop={10}
+            accessibilityRole="button"
+            accessibilityLabel={picked ? `Remove ${d.title} from crawl` : `Add ${d.title} to crawl`}
+            style={({ pressed }) => [
+              styles.dealToggle,
+              picked ? { backgroundColor: theme.primary, borderColor: theme.primary } : { borderColor: theme.border },
+              pressed && styles.pressed,
+            ]}>
+            <ThemedText type="captionStrong" style={{ color: picked ? theme.onPrimary : theme.text }}>
+              {picked ? '✓ Added' : 'Add'}
+            </ThemedText>
+          </Pressable>
+        </View>
+      </Fragment>
+    );
+  };
+
   return (
     <ThemedView style={styles.container}>
       <Stack.Screen options={{ title: '' }} />
@@ -59,7 +119,15 @@ export default function VenueScreen() {
             <ThemedText type="caption" themeColor="textSecondary">
               {venue.neighborhood} · {venue.address}
             </ThemedText>
-            <StatusBadge status={dealStatus(venue.deals, now)} now={now} />
+            {features.length > 0 && (
+              <ThemedText type="caption" themeColor="textSecondary">
+                {features.join(' · ')}
+              </ThemedText>
+            )}
+            <View style={styles.statusLine}>
+              {deals.length > 0 && <StatusBadge status={dealStatus(deals, now)} now={now} />}
+              <EventBadge events={liveEvents} />
+            </View>
           </View>
 
           <View style={styles.actions}>
@@ -85,55 +153,19 @@ export default function VenueScreen() {
               Only here for one? Add just that deal and your crawl is timed around it.
             </ThemedText>
           </View>
+          {deals.length === 0 && <ThemedText themeColor="textSecondary">No deals listed yet.</ThemedText>}
+          <View>{deals.map(renderListing)}</View>
 
-          {venue.deals.length === 0 && <ThemedText themeColor="textSecondary">No deals listed yet.</ThemedText>}
-          <View>
-            {venue.deals.map((d, i) => {
-              const picked = pickedDealIds?.includes(d.id) ?? false;
-              const status = dealStatus([d], now);
-              return (
-                <Fragment key={d.id}>
-                  {i > 0 && <View style={[styles.divider, { backgroundColor: theme.border }]} />}
-                  <View style={styles.deal}>
-                    <View style={styles.dealBody}>
-                      <ThemedText type="bodyStrong">{d.title}</ThemedText>
-                      <ThemedText type="caption">
-                        {formatDays(d.days)} · {formatWindow(d.startMin, d.endMin)}
-                        <ThemedText type="caption" themeColor="textTertiary">
-                          {'  ·  '}
-                          {CATEGORY_LABEL[d.category]}
-                        </ThemedText>
-                      </ThemedText>
-                      {d.details && (
-                        <ThemedText type="caption" themeColor="textSecondary">
-                          {d.details}
-                        </ThemedText>
-                      )}
-                      {d.menu && <DealMenu menu={d.menu} />}
-                      <StatusBadge status={status} now={now} />
-                      <DealFeedback deal={d} live={status.kind === 'active'} now={now} />
-                    </View>
-                    <Pressable
-                      onPress={() => onToggleDeal(d.id)}
-                      hitSlop={10}
-                      accessibilityRole="button"
-                      accessibilityLabel={picked ? `Remove ${d.title} from crawl` : `Add ${d.title} to crawl`}
-                      style={({ pressed }) => [
-                        styles.dealToggle,
-                        picked
-                          ? { backgroundColor: theme.primary, borderColor: theme.primary }
-                          : { borderColor: theme.border },
-                        pressed && styles.pressed,
-                      ]}>
-                      <ThemedText type="captionStrong" style={{ color: picked ? theme.onPrimary : theme.text }}>
-                        {picked ? '✓ Added' : 'Add'}
-                      </ThemedText>
-                    </Pressable>
-                  </View>
-                </Fragment>
-              );
-            })}
-          </View>
+          {events.length > 0 && (
+            <>
+              <View style={styles.section}>
+                <ThemedText type="overline" themeColor="textSecondary">
+                  EVENTS & NIGHTS
+                </ThemedText>
+              </View>
+              <View>{events.map(renderListing)}</View>
+            </>
+          )}
 
           <Pressable
             onPress={() => router.push({ pathname: '/suggest', params: { venueId: venue.id } })}
@@ -159,6 +191,7 @@ const styles = StyleSheet.create({
   content: { paddingHorizontal: Spacing.four, paddingTop: Spacing.two, paddingBottom: Spacing.six, alignItems: 'center' },
   inner: { width: '100%', maxWidth: MaxContentWidth, gap: Spacing.four },
   titleBlock: { gap: Spacing.two },
+  statusLine: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: Spacing.two },
   actions: { flexDirection: 'row', gap: Spacing.two },
   section: { gap: Spacing.one, marginTop: Spacing.two },
   divider: { height: StyleSheet.hairlineWidth },

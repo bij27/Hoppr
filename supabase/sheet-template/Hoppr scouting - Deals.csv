@@ -1,5 +1,5 @@
-bar,deal,details,type,days,start,end,notes
-Del Mar,"$3 off dips & spreads, $4 off starters, $5 off specialties",Bar area only,food,Mon-Fri,4 PM,6 PM,
-Del Mar,"$5 off signature cocktails, $3 off wine by the glass",Bar area only,drinks,Mon-Fri,4 PM,6 PM,
-Del Mar,Wine Enthusiast Wednesday: 50% off wine bottles,Bottles $100 and under,drinks,Wed,4 PM,10 PM,
-Del Mar,Half-off Veuve Clicquot bottles & glasses,During weekend brunch,drinks,Weekends,11 AM,3 PM,
+bar,deal,details,type,days,start,end,tags,notes
+Del Mar,"$3 off dips & spreads, $4 off starters, $5 off specialties",Bar area only,food,Mon-Fri,4 PM,6 PM,,
+Del Mar,"$5 off signature cocktails, $3 off wine by the glass",Bar area only,drinks,Mon-Fri,4 PM,6 PM,,
+Del Mar,Wine Enthusiast Wednesday: 50% off wine bottles,Bottles $100 and under,drinks,Wed,4 PM,10 PM,,
+Del Mar,Half-off Veuve Clicquot bottles & glasses,During weekend brunch,drinks,Weekends,11 AM,3 PM,,

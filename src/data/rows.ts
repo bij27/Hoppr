@@ -9,11 +9,14 @@ export type VenueRow = {
   address: string;
   lat: number;
   lng: number;
+  tags?: string[] | null;
   deals: DealRow[] | null;
 };
 
 export type DealRow = {
   id: string;
+  kind?: string;
+  tags?: string[] | null;
   title: string;
   details: string | null;
   category: DealCategory;
@@ -33,6 +36,7 @@ export function venueFromRow(row: VenueRow): Venue {
     neighborhood: row.neighborhood,
     address: row.address,
     location: { lat: row.lat, lng: row.lng },
+    tags: stringList(row.tags),
     deals: (row.deals ?? []).map((d) => dealFromRow(d, row.id)),
   };
 }
@@ -41,6 +45,8 @@ function dealFromRow(row: DealRow, venueId: string): Deal {
   return {
     id: row.id,
     venueId,
+    kind: row.kind === 'event' ? 'event' : 'deal',
+    tags: stringList(row.tags),
     title: row.title,
     details: row.details,
     category: row.category,
@@ -72,4 +78,8 @@ export function parseMenu(value: unknown): MenuSection[] | null {
     if (clean.length > 0) sections.push({ section, items: clean.map(({ name, price }) => ({ name, price })) });
   }
   return sections.length > 0 ? sections : null;
+}
+
+function stringList(value: unknown): string[] {
+  return Array.isArray(value) ? value.filter((x): x is string => typeof x === 'string') : [];
 }

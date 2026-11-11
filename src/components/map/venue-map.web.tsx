@@ -82,7 +82,7 @@ export function VenueMap({ pins, selectedId, onSelect, showUserLocation, bottomI
         icon: pinIcon(L, pin, selected, scheme),
         title: pin.label,
         keyboard: true,
-        zIndexOffset: selected ? 1000 : pin.tone === 'live' ? 500 : pin.tone === 'soon' ? 250 : 0,
+        zIndexOffset: selected ? 1000 : pin.tone === 'live' ? 500 : pin.tone === 'event' ? 400 : pin.tone === 'soon' ? 250 : 0,
       })
         .on('click', (e) => {
           L.DomEvent.stopPropagation(e);

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildImport, parseCoordinates, parseCsv, parseDays, parseTime, slugify, toRecords, toSql } from './parse.mjs';
+import { buildImport, parseCoordinates, parseCsv, parseDays, parseTags, parseTime, slugify, toRecords, toSql } from './parse.mjs';
 
 describe('parseCsv', () => {
   it('handles quotes, escaped quotes, commas and newlines inside fields', () => {
@@ -120,5 +120,32 @@ describe('toSql', () => {
     expect(sql).toContain("'{1,2,3,4,5}'::smallint[], 960, 1140, null::jsonb");
     expect(sql.trim().startsWith('--')).toBe(true);
     expect(sql).toContain('commit;');
+  });
+});
+
+describe('tags and events', () => {
+  it('reads tags by name, label or alias, and rejects ones in the wrong place', () => {
+    expect(parseTags('Pool, darts; outdoor seating', 'features')).toEqual({ slugs: ['pool', 'darts', 'patio'], problems: [] });
+    expect(parseTags('karaoke, Live band', 'events').slugs).toEqual(['karaoke', 'live-music']);
+    expect(parseTags('karaoke', 'features').problems[0]).toContain('put it on the deal or event');
+    expect(parseTags('hot tub', 'features').problems[0]).toContain('unknown tag "hot tub"');
+  });
+
+  it('imports an event with tags and writes them to SQL', () => {
+    const { bars, errors } = buildImport({
+      bars: [{ ...bar, tags: 'pool, patio' }],
+      deals: [{ ...deal, deal: 'Karaoke Thursday', type: 'event', tags: 'karaoke', days: 'Thu', start: '9 PM', end: '1 AM' }],
+    });
+    expect(errors).toEqual([]);
+    expect(bars[0].tags).toEqual(['pool', 'patio']);
+    expect(bars[0].deals[0]).toMatchObject({ kind: 'event', tags: ['karaoke'], days: [4], start: 1260, end: 60 });
+    const sql = toSql(bars);
+    expect(sql).toContain("'{pool,patio}'::text[]");
+    expect(sql).toContain("'Karaoke Thursday', 'event', null, 'drinks', '{karaoke}'::text[]");
+  });
+
+  it('reports bad tags with the row', () => {
+    const { errors } = buildImport({ bars: [bar], deals: [{ ...deal, tags: 'pool' }] });
+    expect(errors[0]).toMatch(/^Deals row 2 \(\$5 margs\): "Pool tables" is a bar feature/);
   });
 });
