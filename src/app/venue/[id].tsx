@@ -5,6 +5,7 @@ import { Linking, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { Button } from '@/components/button';
 import { DealFeedback } from '@/components/deal-feedback';
 import { DealMenu } from '@/components/deal-menu';
+import { FrogLoader } from '@/components/frog-loader';
 import { StatusBadge } from '@/components/status-badge';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -32,7 +33,7 @@ export default function VenueScreen() {
   if (!venue) {
     return (
       <ThemedView style={styles.center}>
-        <ThemedText themeColor="textSecondary">{loading ? 'Loading…' : 'This bar isn’t available.'}</ThemedText>
+        {loading ? <FrogLoader size={56} /> : <ThemedText themeColor="textSecondary">This bar isn’t available.</ThemedText>}
       </ThemedView>
     );
   }

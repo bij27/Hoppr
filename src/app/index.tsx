@@ -1,10 +1,11 @@
 import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { ActivityIndicator, FlatList, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { FlatList, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BottomSheet } from '@/components/bottom-sheet';
 import { Button } from '@/components/button';
+import { FrogLoader } from '@/components/frog-loader';
 import { VenueMap } from '@/components/map/venue-map';
 import type { MapPin } from '@/components/map/types';
 import { Segmented } from '@/components/segmented';
@@ -189,7 +190,9 @@ export default function HomeScreen() {
           }
           ListEmptyComponent={
             loading ? (
-              <ActivityIndicator style={styles.empty} color={theme.text} />
+              <View style={styles.empty}>
+                <FrogLoader size={56} />
+              </View>
             ) : error ? (
               <View style={styles.empty}>
                 <ThemedText themeColor="textSecondary" style={styles.center}>

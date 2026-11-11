@@ -4,11 +4,12 @@ import { useEffect } from 'react';
 import { StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
+import { LaunchScreen } from '@/components/launch-screen';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { CrawlProvider } from '@/state/crawl';
 import { FeedbackProvider } from '@/state/feedback';
-import { VenuesProvider } from '@/state/venues';
+import { useVenues, VenuesProvider } from '@/state/venues';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -43,12 +44,19 @@ export default function RootLayout() {
                 <Stack.Screen name="crawl" options={{ title: '' }} />
                 <Stack.Screen name="suggest" options={{ title: '' }} />
               </Stack>
+              <LaunchGate />
             </FeedbackProvider>
           </CrawlProvider>
         </VenuesProvider>
       </ThemeProvider>
     </GestureHandlerRootView>
   );
+}
+
+/** Plays the frog launch animation until the first venues have loaded. */
+function LaunchGate() {
+  const { loading } = useVenues();
+  return <LaunchScreen ready={!loading} />;
 }
 
 const styles = StyleSheet.create({
